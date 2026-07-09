@@ -43,7 +43,7 @@ const CONTATO = {
   whatsapp: "5584991260677", // somente números, com DDI + DDD
   telefoneExibicao: "(84) 99126-0677",
   email: "contato@sousacostaenergia.com.br",
-  instagram: "https://www.instagram.com/sousacostaenergia",
+  instagram: "https://www.instagram.com/sousacosta.energia",
   cidade: "Fortaleza · CE — atendimento em todo o Brasil",
 };
 
