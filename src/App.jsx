@@ -40,8 +40,8 @@ import {
 /*  Dados de contato — edite aqui para atualizar o site inteiro        */
 /* ------------------------------------------------------------------ */
 const CONTATO = {
-  whatsapp: "5585991740792", // somente números, com DDI + DDD
-  telefoneExibicao: "(85) 99174-0792",
+  whatsapp: "5584991260677", // somente números, com DDI + DDD
+  telefoneExibicao: "(84) 99126-0677",
   email: "contato@sousacostaenergia.com.br",
   instagram: "https://www.instagram.com/sousacostaenergia",
   cidade: "Fortaleza · CE — atendimento em todo o Brasil",
