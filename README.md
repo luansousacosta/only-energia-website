@@ -34,20 +34,18 @@ npm run preview    # pré-visualiza o build
 - **Logo:** `public/logo-sousa-costa.png`.
 
 ## Integração do formulário com n8n → Reonic (CRM)
-O formulário de contato envia o lead via **POST (JSON)** para um **Webhook do
-n8n**, reaproveitando o mesmo fluxo de atendimento/qualificação já usado no
-WhatsApp para criar o card no **Reonic**.
+O formulário de contato envia o lead via **POST (JSON)** para o fluxo n8n
+**"Site → Reonic (Sousa Costa Energia)"**, que normaliza os dados e cria o card
+no **Reonic** — o mesmo endpoint usado pela Ágata (WhatsApp).
 
-1. No n8n, adicione um nó **Webhook** (método `POST`) ao fluxo — ou crie um
-   fluxo curto que chame o mesmo sub-fluxo de qualificação + criação de card no
-   Reonic que o WhatsApp já usa.
-2. Copie a **Production URL** do webhook.
-3. Crie um arquivo `.env` na raiz (baseado em `.env.example`) com:
-   ```
-   VITE_N8N_WEBHOOK_URL="https://SEU-N8N/webhook/lead-site"
-   ```
-   No Netlify, defina a mesma variável em *Site settings → Environment variables*.
-4. Rode `npm run build` para gerar o site com a URL configurada.
+- **Webhook de produção:** `https://sousacosta.app.n8n.cloud/webhook/lead-site`
+  (já é o padrão no código; sobrescreva com `VITE_N8N_WEBHOOK_URL` se precisar).
+- **Fluxo n8n:** `Webhook Site → Normaliza Lead → Cria Lead Reonic (Site) →
+  Responde Site`. O nó Reonic usa a mesma credencial *Header Auth* da Ágata.
+
+Para ativar (uma vez): no n8n, abra o nó **"Cria Lead Reonic (Site)"**, selecione
+a mesma credencial de *Header Auth* usada no fluxo da Ágata, salve e **ative** o
+workflow.
 
 **Payload enviado ao webhook:**
 ```json

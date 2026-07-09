@@ -54,12 +54,13 @@ const CONTATO = {
  * O formulário faz um POST (JSON) para esta URL — reaproveitando o mesmo
  * fluxo de atendimento/qualificação já usado no WhatsApp.
  *
- * Configure em produção pela variável de ambiente VITE_N8N_WEBHOOK_URL
- * (crie um arquivo .env com: VITE_N8N_WEBHOOK_URL="https://SEU-N8N/webhook/lead-site")
- * ou cole a URL diretamente abaixo.
+ * Aponta para o fluxo "Site → Reonic (Sousa Costa Energia)" no n8n.
+ * Pode ser sobrescrito em produção pela variável de ambiente
+ * VITE_N8N_WEBHOOK_URL (crie um arquivo .env, ou defina no Netlify).
  */
 const N8N_WEBHOOK_URL =
-  (import.meta.env && import.meta.env.VITE_N8N_WEBHOOK_URL) || "";
+  (import.meta.env && import.meta.env.VITE_N8N_WEBHOOK_URL) ||
+  "https://sousacosta.app.n8n.cloud/webhook/lead-site";
 
 const wa = (msg) =>
   `https://wa.me/${CONTATO.whatsapp}?text=${encodeURIComponent(
