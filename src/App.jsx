@@ -920,42 +920,28 @@ function Diferenciais() {
 /*  Projetos realizados                                                */
 /* ------------------------------------------------------------------ */
 /*
- * Para usar fotos reais: coloque os arquivos em `public/projetos/` e
- * preencha o campo `img` de cada projeto (ex.: "/projetos/usina-mossoro.jpg").
- * Sem `img`, é exibida uma moldura da marca no lugar da foto.
- * Ajuste os dados (local, potência, economia) conforme os projetos reais.
+ * Projetos reais extraídos da apresentação comercial. As fotos ficam em
+ * `public/projetos/`. Para adicionar/editar, basta atualizar os campos abaixo.
  */
 const PROJETOS = [
-  { titulo: "Residência de alto padrão", local: "Natal · RN", tipo: "Residencial", potencia: "9,9 kWp", modulos: "18 módulos", economia: "94% de economia", img: "" },
-  { titulo: "Supermercado", local: "Parnamirim · RN", tipo: "Comercial", potencia: "45 kWp", modulos: "82 módulos", economia: "88% de economia", img: "" },
-  { titulo: "Usina de geração", local: "Mossoró · RN", tipo: "Usina", potencia: "120 kWp", modulos: "218 módulos", economia: "Renda passiva", img: "" },
-  { titulo: "Galpão industrial", local: "Macaíba · RN", tipo: "Comercial", potencia: "75 kWp", modulos: "136 módulos", economia: "90% de economia", img: "" },
-  { titulo: "Residência familiar", local: "Natal · RN", tipo: "Residencial", potencia: "5,5 kWp", modulos: "10 módulos", economia: "95% de economia", img: "" },
-  { titulo: "Propriedade rural", local: "Ceará-Mirim · RN", tipo: "Usina", potencia: "30 kWp", modulos: "54 módulos", economia: "92% de economia", img: "" },
+  { titulo: "Complexo Ipiranga — UFV 1 a 5", local: "Guaíba · RS", tipo: "Destaque", potencia: "6,4 MWp", modulos: "13.500 módulos", extra: "Retrofit e recuperação de ativo", status: "Retrofit", img: "projetos/complexo-ipiranga.jpg" },
+  { titulo: "UFV ADPaz", local: "Natal · RN", tipo: "Usinas", potencia: "110 kWp", modulos: "192 módulos", extra: "Autoconsumo remoto · retorno em 3,5 anos", img: "projetos/ufv-adpaz.jpg" },
+  { titulo: "UFV Cánada I", local: "S. José do Mipibu · RN", tipo: "Usinas", potencia: "140 kWp", modulos: "200 módulos", extra: "Autoconsumo remoto · payback em 4 anos", img: "projetos/ufv-canada-1.jpg" },
+  { titulo: "UFV Taipu III", local: "Taipu · RN", tipo: "Usinas", potencia: "109,4 kWp", modulos: "192 módulos", extra: "Autoconsumo remoto · retorno em 4,5 anos", img: "projetos/ufv-taipu-3.jpg" },
+  { titulo: "UFV JR 01", local: "Nisía Floresta · RN", tipo: "Usinas", potencia: "105 kWp", modulos: "168 módulos", extra: "Autoconsumo remoto · retorno em 3,5 anos", img: "projetos/ufv-jr01.jpg" },
+  { titulo: "Ampliação UFV Rio Verde", local: "Brejinho · RN", tipo: "Usinas", potencia: "37,5 kWp", modulos: "68 módulos", extra: "Autoconsumo remoto · retorno em 3,8 anos", img: "projetos/rio-verde.jpg" },
+  { titulo: "UFV Cánada II", local: "S. José do Mipibu · RN", tipo: "Usinas", potencia: "140 kWp", modulos: "200 módulos", extra: "Autoconsumo remoto · payback em 4 anos", status: "Em obras", img: "projetos/ufv-canada-2.jpg" },
+  { titulo: "Fábrica Universo EPI", local: "Natal · RN", tipo: "Comercial", potencia: "12 kWp", modulos: "22 módulos", extra: "Autoconsumo remoto · retorno em 4 anos", img: "projetos/universo-epi.jpg" },
+  { titulo: "Pousada do Jorge", local: "Riachuelo · RN", tipo: "Comercial", potencia: "9,1 kWp", modulos: "20 módulos", extra: "Autoconsumo remoto · retorno em 3,5 anos", img: "projetos/pousada-jorge.jpg" },
 ];
 
-const FILTROS = ["Todos", "Residencial", "Comercial", "Usina"];
+const PORTFOLIO_NUMEROS = [
+  { v: "1,2 MWp", l: "implantados com sucesso" },
+  { v: "2,3 MWp", l: "em projeto e implantação" },
+  { v: "9 MWp", l: "em O&M e monitoramento" },
+];
 
-const ProjetoPlaceholder = ({ tipo }) => {
-  const Icone = tipo === "Residencial" ? Home : tipo === "Comercial" ? Building2 : TrendingUp;
-  return (
-    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-royal-600 via-royal-700 to-royal-900">
-      <div
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)",
-          backgroundSize: "26px 26px",
-        }}
-      />
-      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-500/30 blur-2xl" />
-      <div className="relative flex flex-col items-center text-white/90">
-        <Icone className="h-10 w-10" />
-        <span className="mt-2 text-xs font-semibold uppercase tracking-widest text-brand-300">Sousa Costa</span>
-      </div>
-    </div>
-  );
-};
+const FILTROS = ["Todos", "Usinas", "Comercial", "Destaque"];
 
 function Projetos() {
   const [filtro, setFiltro] = useState("Todos");
@@ -964,10 +950,20 @@ function Projetos() {
     <section id="projetos" className="py-20 sm:py-28">
       <Container>
         <SectionHead
-          eyebrow="Projetos realizados"
-          title="Energia que já está gerando resultado"
-          subtitle="Residências, empresas e usinas espalhadas pelo Rio Grande do Norte — cada projeto é dimensionado sob medida e entregue com acompanhamento completo."
+          eyebrow="Portfólio · Projetos realizados"
+          title="Usinas em operação, resultado comprovado"
+          subtitle="Da viabilidade ao O&M, desenvolvemos e gerenciamos usinas solares como ativos de infraestrutura — no Rio Grande do Norte e além."
         />
+
+        {/* Números reais do portfólio */}
+        <div className="mx-auto mb-12 grid max-w-3xl grid-cols-3 gap-px overflow-hidden rounded-2xl border border-royal-100 bg-royal-100 shadow-card">
+          {PORTFOLIO_NUMEROS.map((n) => (
+            <div key={n.l} className="bg-white p-5 text-center">
+              <p className="font-display text-2xl font-extrabold text-royal-700 sm:text-3xl">{n.v}</p>
+              <p className="mt-1 text-xs text-royal-900/60 sm:text-sm">{n.l}</p>
+            </div>
+          ))}
+        </div>
 
         <div className="mb-10 flex flex-wrap justify-center gap-2">
           {FILTROS.map((f) => (
@@ -988,37 +984,41 @@ function Projetos() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {lista.map((p, i) => (
             <Reveal key={p.titulo} delay={(i % 3) * 0.08}>
-              <article className="group h-full overflow-hidden rounded-3xl border border-royal-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow">
-                <div className="relative aspect-[4/3] w-full overflow-hidden">
-                  {p.img ? (
-                    <img
-                      src={p.img}
-                      alt={`${p.titulo} — ${p.local}`}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                  ) : (
-                    <ProjetoPlaceholder tipo={p.tipo} />
-                  )}
-                  <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700 backdrop-blur">
-                    {p.tipo}
-                  </span>
-                  <span className="absolute right-4 top-4 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-royal-950">
-                    {p.economia}
-                  </span>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-display text-lg font-bold text-royal-950">{p.titulo}</h3>
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-royal-900/60">
-                    <MapPin className="h-4 w-4 text-brand-600" /> {p.local}
-                  </p>
-                  <div className="mt-4 flex items-center gap-4 border-t border-royal-100 pt-4 text-sm">
-                    <span className="inline-flex items-center gap-1.5 font-semibold text-royal-800">
-                      <Zap className="h-4 w-4 text-brand-600" /> {p.potencia}
+              <article className="group relative h-full overflow-hidden rounded-3xl border border-royal-100 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow">
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-royal-800">
+                  <img
+                    src={p.img}
+                    alt={`${p.titulo} — ${p.local}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-royal-950 via-royal-950/55 to-royal-950/5" />
+
+                  <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+                    <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700 backdrop-blur">
+                      {p.tipo}
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-royal-900/60">
-                      <Sun className="h-4 w-4 text-brand-600" /> {p.modulos}
-                    </span>
+                    {p.status && (
+                      <span className="rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-royal-950">
+                        {p.status}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                    <h3 className="font-display text-lg font-bold leading-tight">{p.titulo}</h3>
+                    <p className="mt-1 flex items-center gap-1.5 text-sm text-white/80">
+                      <MapPin className="h-4 w-4 text-brand-400" /> {p.local}
+                    </p>
+                    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+                      <span className="inline-flex items-center gap-1.5 font-bold text-brand-400">
+                        <Zap className="h-4 w-4" /> {p.potencia}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-white/75">
+                        <Sun className="h-4 w-4" /> {p.modulos}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs text-white/60">{p.extra}</p>
                   </div>
                 </div>
               </article>
@@ -1028,7 +1028,7 @@ function Projetos() {
 
         <div className="mt-12 text-center">
           <a
-            href={wa("Olá! Vi os projetos no site e quero um projeto sob medida para mim.")}
+            href={wa("Olá! Vi os projetos no site e quero desenvolver/investir em uma usina solar com a Sousa Costa.")}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-7 py-3.5 font-bold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400"
