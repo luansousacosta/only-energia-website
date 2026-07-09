@@ -169,7 +169,7 @@ const NAV = [
   { label: "Soluções", href: "#solucoes" },
   { label: "Simulador", href: "#simulador" },
   { label: "Investimento", href: "#investimento" },
-  { label: "Como funciona", href: "#como-funciona" },
+  { label: "Projetos", href: "#projetos" },
   { label: "Contato", href: "#contato" },
 ];
 
@@ -917,6 +917,131 @@ function Diferenciais() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Projetos realizados                                                */
+/* ------------------------------------------------------------------ */
+/*
+ * Para usar fotos reais: coloque os arquivos em `public/projetos/` e
+ * preencha o campo `img` de cada projeto (ex.: "/projetos/usina-mossoro.jpg").
+ * Sem `img`, é exibida uma moldura da marca no lugar da foto.
+ * Ajuste os dados (local, potência, economia) conforme os projetos reais.
+ */
+const PROJETOS = [
+  { titulo: "Residência de alto padrão", local: "Natal · RN", tipo: "Residencial", potencia: "9,9 kWp", modulos: "18 módulos", economia: "94% de economia", img: "" },
+  { titulo: "Supermercado", local: "Parnamirim · RN", tipo: "Comercial", potencia: "45 kWp", modulos: "82 módulos", economia: "88% de economia", img: "" },
+  { titulo: "Usina de geração", local: "Mossoró · RN", tipo: "Usina", potencia: "120 kWp", modulos: "218 módulos", economia: "Renda passiva", img: "" },
+  { titulo: "Galpão industrial", local: "Macaíba · RN", tipo: "Comercial", potencia: "75 kWp", modulos: "136 módulos", economia: "90% de economia", img: "" },
+  { titulo: "Residência familiar", local: "Natal · RN", tipo: "Residencial", potencia: "5,5 kWp", modulos: "10 módulos", economia: "95% de economia", img: "" },
+  { titulo: "Propriedade rural", local: "Ceará-Mirim · RN", tipo: "Usina", potencia: "30 kWp", modulos: "54 módulos", economia: "92% de economia", img: "" },
+];
+
+const FILTROS = ["Todos", "Residencial", "Comercial", "Usina"];
+
+const ProjetoPlaceholder = ({ tipo }) => {
+  const Icone = tipo === "Residencial" ? Home : tipo === "Comercial" ? Building2 : TrendingUp;
+  return (
+    <div className="relative flex h-full w-full items-center justify-center overflow-hidden bg-gradient-to-br from-royal-600 via-royal-700 to-royal-900">
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.18) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.18) 1px, transparent 1px)",
+          backgroundSize: "26px 26px",
+        }}
+      />
+      <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-brand-500/30 blur-2xl" />
+      <div className="relative flex flex-col items-center text-white/90">
+        <Icone className="h-10 w-10" />
+        <span className="mt-2 text-xs font-semibold uppercase tracking-widest text-brand-300">Sousa Costa</span>
+      </div>
+    </div>
+  );
+};
+
+function Projetos() {
+  const [filtro, setFiltro] = useState("Todos");
+  const lista = filtro === "Todos" ? PROJETOS : PROJETOS.filter((p) => p.tipo === filtro);
+  return (
+    <section id="projetos" className="py-20 sm:py-28">
+      <Container>
+        <SectionHead
+          eyebrow="Projetos realizados"
+          title="Energia que já está gerando resultado"
+          subtitle="Residências, empresas e usinas espalhadas pelo Rio Grande do Norte — cada projeto é dimensionado sob medida e entregue com acompanhamento completo."
+        />
+
+        <div className="mb-10 flex flex-wrap justify-center gap-2">
+          {FILTROS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFiltro(f)}
+              className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                filtro === f
+                  ? "bg-royal-600 text-white shadow-lg shadow-royal-600/25"
+                  : "border border-royal-200 bg-white text-royal-700 hover:border-royal-300"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {lista.map((p, i) => (
+            <Reveal key={p.titulo} delay={(i % 3) * 0.08}>
+              <article className="group h-full overflow-hidden rounded-3xl border border-royal-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow">
+                <div className="relative aspect-[4/3] w-full overflow-hidden">
+                  {p.img ? (
+                    <img
+                      src={p.img}
+                      alt={`${p.titulo} — ${p.local}`}
+                      loading="lazy"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  ) : (
+                    <ProjetoPlaceholder tipo={p.tipo} />
+                  )}
+                  <span className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700 backdrop-blur">
+                    {p.tipo}
+                  </span>
+                  <span className="absolute right-4 top-4 rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-royal-950">
+                    {p.economia}
+                  </span>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-display text-lg font-bold text-royal-950">{p.titulo}</h3>
+                  <p className="mt-1 flex items-center gap-1.5 text-sm text-royal-900/60">
+                    <MapPin className="h-4 w-4 text-brand-600" /> {p.local}
+                  </p>
+                  <div className="mt-4 flex items-center gap-4 border-t border-royal-100 pt-4 text-sm">
+                    <span className="inline-flex items-center gap-1.5 font-semibold text-royal-800">
+                      <Zap className="h-4 w-4 text-brand-600" /> {p.potencia}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 text-royal-900/60">
+                      <Sun className="h-4 w-4 text-brand-600" /> {p.modulos}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+
+        <div className="mt-12 text-center">
+          <a
+            href={wa("Olá! Vi os projetos no site e quero um projeto sob medida para mim.")}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-full bg-brand-500 px-7 py-3.5 font-bold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400"
+          >
+            Quero meu projeto <ArrowRight className="h-4 w-4" />
+          </a>
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  FAQ                                                                */
 /* ------------------------------------------------------------------ */
 const FAQ = [
@@ -1388,6 +1513,7 @@ export default function App() {
         <Simulador conta={conta} setConta={setConta} />
         <Investimento />
         <ComoFunciona />
+        <Projetos />
         <Diferenciais />
         <FaqSection />
         <Contato conta={conta} />
