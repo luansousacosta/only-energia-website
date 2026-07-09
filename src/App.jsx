@@ -34,6 +34,8 @@ import {
   Factory,
   Handshake,
   Quote,
+  Loader2,
+  CheckCircle2,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -44,13 +46,45 @@ const CONTATO = {
   telefoneExibicao: "(84) 99126-0677",
   email: "contato@sousacostaenergia.com.br",
   instagram: "https://www.instagram.com/sousacosta.energia",
-  cidade: "Fortaleza · CE — atendimento em todo o Brasil",
+  cidade: "Atendimento em todo o Brasil",
 };
+
+/*
+ * Webhook do n8n que qualifica o lead e cria o card no Reonic.
+ * O formulário faz um POST (JSON) para esta URL — reaproveitando o mesmo
+ * fluxo de atendimento/qualificação já usado no WhatsApp.
+ *
+ * Configure em produção pela variável de ambiente VITE_N8N_WEBHOOK_URL
+ * (crie um arquivo .env com: VITE_N8N_WEBHOOK_URL="https://SEU-N8N/webhook/lead-site")
+ * ou cole a URL diretamente abaixo.
+ */
+const N8N_WEBHOOK_URL =
+  (import.meta.env && import.meta.env.VITE_N8N_WEBHOOK_URL) || "";
 
 const wa = (msg) =>
   `https://wa.me/${CONTATO.whatsapp}?text=${encodeURIComponent(
     msg || "Olá! Vim pelo site e quero conhecer as soluções da Sousa Costa Energia."
   )}`;
+
+/*
+ * Envia o lead para o n8n → qualificação → card no Reonic.
+ * Retorna { ok: true } em sucesso. Em caso de falha ou webhook não
+ * configurado, retorna { ok: false } para acionar o fallback de WhatsApp,
+ * garantindo que nenhum lead se perca.
+ */
+async function enviarLead(payload) {
+  if (!N8N_WEBHOOK_URL) return { ok: false, motivo: "sem-webhook" };
+  try {
+    const resp = await fetch(N8N_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    return { ok: resp.ok, status: resp.status };
+  } catch (err) {
+    return { ok: false, motivo: "erro-rede" };
+  }
+}
 
 const brl = (n) =>
   n.toLocaleString("pt-BR", {
@@ -561,8 +595,7 @@ function Solucoes() {
 /* ------------------------------------------------------------------ */
 /*  Simulador de economia                                              */
 /* ------------------------------------------------------------------ */
-function Simulador() {
-  const [conta, setConta] = useState(600);
+function Simulador({ conta, setConta }) {
   const pct = 0.9; // economia conservadora de 90%
 
   const dados = useMemo(() => {
@@ -660,19 +693,16 @@ function Simulador() {
                 </div>
               </div>
 
-              <a
-                href={wa(
-                  `Olá! Simulei no site: minha conta é de ${brl(
-                    conta
-                  )}/mês e quero economizar cerca de ${brl(dados.mensal)}. Podem me enviar uma proposta?`
-                )}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() =>
+                  document.getElementById("contato")?.scrollIntoView({ behavior: "smooth" })
+                }
                 className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-6 py-4 font-bold text-royal-950 shadow-lg transition hover:bg-brand-400"
               >
                 Quero essa economia
                 <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </a>
+              </button>
               <p className="text-center text-xs text-royal-200">
                 *Estimativa ilustrativa. A economia real depende de consumo, telhado, distribuidora e projeto.
               </p>
@@ -965,7 +995,75 @@ function FaqSection() {
 /* ------------------------------------------------------------------ */
 /*  Contato                                                            */
 /* ------------------------------------------------------------------ */
-function Contato() {
+const INTERESSES = [
+  "Energia solar residencial",
+  "Solar para empresa / indústria",
+  "Usina solar de investimento",
+  "Soluções inteligentes de energia",
+];
+
+const inputCls =
+  "w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200";
+
+function Contato({ conta = 600 }) {
+  const [form, setForm] = useState({
+    nome: "",
+    telefone: "",
+    email: "",
+    interesse: INTERESSES[0],
+    valorConta: conta,
+    mensagem: "",
+    consentimento: false,
+  });
+  const [status, setStatus] = useState("idle"); // idle | sending | success | error
+
+  // Mantém o valor da conta em sincronia com o simulador enquanto o usuário
+  // não editar o campo manualmente.
+  const contaEditada = useRef(false);
+  useEffect(() => {
+    if (!contaEditada.current) setForm((f) => ({ ...f, valorConta: conta }));
+  }, [conta]);
+
+  const setField = (campo) => (e) => {
+    const valor = e.target.type === "checkbox" ? e.target.checked : e.target.value;
+    if (campo === "valorConta") contaEditada.current = true;
+    setForm((f) => ({ ...f, [campo]: valor }));
+  };
+
+  const textoWhats = () =>
+    `Olá! Sou ${form.nome || "um interessado"}. ` +
+    `Interesse: ${form.interesse}. ` +
+    `Conta média: ${brl(Number(form.valorConta) || 0)}. ` +
+    (form.mensagem ? `Mensagem: ${form.mensagem} ` : "") +
+    `Podem me enviar uma proposta?`;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!form.consentimento || status === "sending") return;
+    setStatus("sending");
+
+    const payload = {
+      nome: form.nome,
+      telefone: form.telefone,
+      email: form.email,
+      interesse: form.interesse,
+      valorConta: Number(form.valorConta) || null,
+      mensagem: form.mensagem,
+      consentimentoLGPD: form.consentimento,
+      origem: "site-formulario",
+      paginaUrl: typeof window !== "undefined" ? window.location.href : "",
+    };
+
+    const res = await enviarLead(payload);
+    if (res.ok) {
+      setStatus("success");
+    } else {
+      // Fallback: não perder o lead — abre o WhatsApp com os dados preenchidos.
+      setStatus("error");
+      window.open(wa(textoWhats()), "_blank", "noopener,noreferrer");
+    }
+  };
+
   return (
     <section id="contato" className="py-20 sm:py-28">
       <Container>
@@ -1011,77 +1109,138 @@ function Contato() {
 
             {/* Formulário */}
             <div className="p-8 sm:p-12 lg:col-span-3">
-              <h3 className="font-display text-xl font-bold text-royal-950">Solicite sua proposta</h3>
-              <p className="mt-1 text-sm text-royal-900/60">Responderemos em até 1 dia útil.</p>
-              <form
-                action="https://formspree.io/f/seu-id"
-                method="POST"
-                className="mt-6 grid gap-4 sm:grid-cols-2"
-              >
-                <div className="sm:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-royal-900">Nome</label>
-                  <input
-                    name="nome"
-                    required
-                    placeholder="Seu nome completo"
-                    className="w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200"
-                  />
-                </div>
-                <div className="sm:col-span-1">
-                  <label className="mb-1.5 block text-sm font-medium text-royal-900">WhatsApp</label>
-                  <input
-                    name="telefone"
-                    required
-                    placeholder="(00) 00000-0000"
-                    className="w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-sm font-medium text-royal-900">E-mail</label>
-                  <input
-                    name="email"
-                    type="email"
-                    required
-                    placeholder="voce@email.com"
-                    className="w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-sm font-medium text-royal-900">Como podemos ajudar?</label>
-                  <select
-                    name="interesse"
-                    className="w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200"
+              {status === "success" ? (
+                <div className="flex h-full flex-col items-center justify-center py-10 text-center">
+                  <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-brand-100 text-brand-600">
+                    <CheckCircle2 className="h-9 w-9" />
+                  </div>
+                  <h3 className="mt-5 font-display text-2xl font-bold text-royal-950">Solicitação enviada! 🎉</h3>
+                  <p className="mt-2 max-w-sm text-sm text-royal-900/65">
+                    Recebemos seus dados e nossa equipe entrará em contato em breve. Se preferir, fale agora mesmo no
+                    WhatsApp.
+                  </p>
+                  <a
+                    href={wa(textoWhats())}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-brand-500 px-6 py-3 font-bold text-royal-950 transition hover:bg-brand-400"
                   >
-                    <option>Energia solar residencial</option>
-                    <option>Solar para empresa / indústria</option>
-                    <option>Usina solar de investimento</option>
-                    <option>Soluções inteligentes de energia</option>
-                  </select>
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="mb-1.5 block text-sm font-medium text-royal-900">Mensagem</label>
-                  <textarea
-                    name="mensagem"
-                    rows="4"
-                    placeholder="Conte um pouco sobre seu consumo ou objetivo..."
-                    className="w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="group inline-flex items-center justify-center gap-2 rounded-xl bg-royal-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-royal-600/25 transition hover:bg-royal-700 sm:col-span-2"
-                >
-                  Enviar solicitação
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </button>
-                <p className="text-center text-xs text-royal-900/50 sm:col-span-2">
-                  Prefere agilidade?{" "}
-                  <a href={wa()} target="_blank" rel="noreferrer" className="font-semibold text-royal-600 hover:underline">
-                    Fale direto no WhatsApp
+                    <MessageCircle className="h-4 w-4" /> Falar no WhatsApp
                   </a>
-                  .
-                </p>
-              </form>
+                </div>
+              ) : (
+                <>
+                  <h3 className="font-display text-xl font-bold text-royal-950">Solicite sua proposta</h3>
+                  <p className="mt-1 text-sm text-royal-900/60">Responderemos em até 1 dia útil.</p>
+                  <form onSubmit={handleSubmit} className="mt-6 grid gap-4 sm:grid-cols-2">
+                    <div className="sm:col-span-1">
+                      <label className="mb-1.5 block text-sm font-medium text-royal-900">Nome</label>
+                      <input
+                        required
+                        value={form.nome}
+                        onChange={setField("nome")}
+                        placeholder="Seu nome completo"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <label className="mb-1.5 block text-sm font-medium text-royal-900">WhatsApp</label>
+                      <input
+                        required
+                        type="tel"
+                        value={form.telefone}
+                        onChange={setField("telefone")}
+                        placeholder="(00) 00000-0000"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <label className="mb-1.5 block text-sm font-medium text-royal-900">E-mail</label>
+                      <input
+                        required
+                        type="email"
+                        value={form.email}
+                        onChange={setField("email")}
+                        placeholder="voce@email.com"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div className="sm:col-span-1">
+                      <label className="mb-1.5 block text-sm font-medium text-royal-900">
+                        Valor médio da conta de luz (R$)
+                      </label>
+                      <input
+                        type="number"
+                        min="0"
+                        step="10"
+                        value={form.valorConta}
+                        onChange={setField("valorConta")}
+                        placeholder="600"
+                        className={inputCls}
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1.5 block text-sm font-medium text-royal-900">Como podemos ajudar?</label>
+                      <select value={form.interesse} onChange={setField("interesse")} className={inputCls}>
+                        {INTERESSES.map((o) => (
+                          <option key={o}>{o}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="mb-1.5 block text-sm font-medium text-royal-900">Mensagem</label>
+                      <textarea
+                        rows="3"
+                        value={form.mensagem}
+                        onChange={setField("mensagem")}
+                        placeholder="Conte um pouco sobre seu consumo ou objetivo..."
+                        className={inputCls}
+                      />
+                    </div>
+
+                    <label className="flex cursor-pointer items-start gap-2.5 text-xs text-royal-900/70 sm:col-span-2">
+                      <input
+                        type="checkbox"
+                        checked={form.consentimento}
+                        onChange={setField("consentimento")}
+                        className="mt-0.5 h-4 w-4 shrink-0 accent-brand-500"
+                      />
+                      Autorizo o contato da Sousa Costa Energia e o tratamento dos meus dados conforme a LGPD.
+                    </label>
+
+                    {status === "error" && (
+                      <p className="rounded-xl bg-amber-50 px-4 py-3 text-xs text-amber-700 sm:col-span-2">
+                        Não foi possível enviar automaticamente. Abrimos o WhatsApp com seus dados para você concluir —
+                        ou tente novamente.
+                      </p>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={!form.consentimento || status === "sending"}
+                      className="group inline-flex items-center justify-center gap-2 rounded-xl bg-royal-600 px-6 py-3.5 font-semibold text-white shadow-lg shadow-royal-600/25 transition hover:bg-royal-700 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2"
+                    >
+                      {status === "sending" ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Enviando...
+                        </>
+                      ) : (
+                        <>
+                          Enviar solicitação
+                          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                        </>
+                      )}
+                    </button>
+                    <p className="text-center text-xs text-royal-900/50 sm:col-span-2">
+                      Prefere agilidade?{" "}
+                      <a href={wa()} target="_blank" rel="noreferrer" className="font-semibold text-royal-600 hover:underline">
+                        Fale direto no WhatsApp
+                      </a>
+                      .
+                    </p>
+                  </form>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -1214,6 +1373,10 @@ function FloatingWhatsApp() {
 /*  App                                                                */
 /* ------------------------------------------------------------------ */
 export default function App() {
+  // Valor da conta compartilhado: o simulador atualiza e o formulário
+  // de contato usa como dado de qualificação (pré-preenchido).
+  const [conta, setConta] = useState(600);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-royal-50/40 to-white font-sans text-royal-950">
       <Header />
@@ -1221,12 +1384,12 @@ export default function App() {
         <Hero />
         <StatStrip />
         <Solucoes />
-        <Simulador />
+        <Simulador conta={conta} setConta={setConta} />
         <Investimento />
         <ComoFunciona />
         <Diferenciais />
         <FaqSection />
-        <Contato />
+        <Contato conta={conta} />
       </main>
       <Footer />
       <FloatingWhatsApp />
