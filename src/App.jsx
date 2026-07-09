@@ -217,7 +217,7 @@ function Header() {
       <Container className="flex h-20 items-center justify-between">
         <a href="#inicio" onClick={(e) => go(e, "#inicio")} className="flex items-center gap-2" aria-label="Sousa Costa Energia">
           <img
-            src="/logo-sousa-costa.png"
+            src="logo-sousa-costa.png"
             alt="Sousa Costa Energia"
             className="h-11 w-auto object-contain sm:h-12"
           />
