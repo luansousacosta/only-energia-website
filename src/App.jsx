@@ -39,6 +39,7 @@ import {
   Wrench,
   BatteryFull,
   Power,
+  ZoomIn,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -959,7 +960,21 @@ const FILTROS = ["Todos", "Usinas", "Comercial", "Destaque"];
 
 function Projetos() {
   const [filtro, setFiltro] = useState("Todos");
+  const [aberto, setAberto] = useState(null);
   const lista = filtro === "Todos" ? PROJETOS : PROJETOS.filter((p) => p.tipo === filtro);
+
+  // Fecha o lightbox com a tecla Esc e trava o scroll do fundo enquanto aberto
+  useEffect(() => {
+    if (!aberto) return;
+    const onKey = (e) => e.key === "Escape" && setAberto(null);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [aberto]);
+
   return (
     <section id="projetos" className="py-20 sm:py-28">
       <Container>
@@ -998,7 +1013,14 @@ function Projetos() {
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {lista.map((p, i) => (
             <Reveal key={p.titulo} delay={(i % 3) * 0.08}>
-              <article className="group relative h-full overflow-hidden rounded-3xl border border-royal-100 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow">
+              <article
+                onClick={() => setAberto(p)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setAberto(p))}
+                aria-label={`Ver foto ampliada — ${p.titulo}`}
+                className="group relative h-full cursor-pointer overflow-hidden rounded-3xl border border-royal-100 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+              >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-royal-800">
                   <img
                     src={p.img}
@@ -1007,6 +1029,11 @@ function Projetos() {
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-royal-950 via-royal-950/55 to-royal-950/5" />
+
+                  {/* Indicador de zoom */}
+                  <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-royal-700 opacity-0 shadow-lg backdrop-blur transition-all duration-300 group-hover:opacity-100">
+                    <ZoomIn className="h-5 w-5" />
+                  </div>
 
                   <div className="absolute left-4 top-4 flex flex-wrap gap-2">
                     <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700 backdrop-blur">
@@ -1051,6 +1078,68 @@ function Projetos() {
           </a>
         </div>
       </Container>
+
+      {/* Lightbox — imagem ampliada e limpa (sem gradiente) */}
+      <AnimatePresence>
+        {aberto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setAberto(null)}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-royal-950/90 p-4 backdrop-blur-sm sm:p-8"
+          >
+            <button
+              onClick={() => setAberto(null)}
+              aria-label="Fechar"
+              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-6 sm:top-6"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <motion.figure
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex max-h-full w-full max-w-5xl flex-col items-center"
+            >
+              <img
+                src={aberto.img}
+                alt={`${aberto.titulo} — ${aberto.local}`}
+                className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+              />
+              <figcaption className="mt-4 w-full max-w-3xl text-center text-white">
+                <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
+                  <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700">
+                    {aberto.tipo}
+                  </span>
+                  {aberto.status && (
+                    <span className="rounded-full bg-brand-500 px-3 py-1 text-xs font-bold text-royal-950">
+                      {aberto.status}
+                    </span>
+                  )}
+                </div>
+                <h3 className="font-display text-xl font-bold">{aberto.titulo}</h3>
+                <p className="mt-1 inline-flex items-center gap-1.5 text-sm text-white/80">
+                  <MapPin className="h-4 w-4 text-brand-400" /> {aberto.local}
+                </p>
+                <div className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-sm">
+                  <span className="inline-flex items-center gap-1.5 font-bold text-brand-400">
+                    <Zap className="h-4 w-4" /> {aberto.potencia}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-white/75">
+                    <Sun className="h-4 w-4" /> {aberto.modulos}
+                  </span>
+                </div>
+                {aberto.extra && <p className="mt-1.5 text-xs text-white/60">{aberto.extra}</p>}
+              </figcaption>
+            </motion.figure>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
