@@ -36,6 +36,9 @@ import {
   Quote,
   Loader2,
   CheckCircle2,
+  Wrench,
+  BatteryFull,
+  Power,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -44,9 +47,9 @@ import {
 const CONTATO = {
   whatsapp: "5584991260677", // somente números, com DDI + DDD
   telefoneExibicao: "(84) 99126-0677",
-  email: "contato@sousacostaenergia.com.br",
+  email: "contato@sousacosta.com.br",
   instagram: "https://www.instagram.com/sousacosta.energia",
-  cidade: "Atendimento em todo o Brasil",
+  cidade: "São Gonçalo do Amarante · RN — atendemos todo o RN",
 };
 
 /*
@@ -324,7 +327,7 @@ function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
               </span>
-              Energia renovável &amp; soluções inteligentes
+              Energia solar · Rio Grande do Norte
             </span>
           </motion.div>
 
@@ -349,9 +352,10 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-royal-900/70"
           >
-            A <strong className="text-royal-800">Sousa Costa Energia</strong> conecta você à energia solar: reduza sua
-            conta de luz em até <strong className="text-royal-800">95%</strong>, invista em usinas geradoras com renda
-            passiva e gerencie tudo com tecnologia de ponta.
+            A <strong className="text-royal-800">Sousa Costa Energia</strong> é especialista em energia solar no{" "}
+            <strong className="text-royal-800">Rio Grande do Norte</strong>: instalação, sistemas híbridos, BESS, usinas
+            de investimento e manutenção (O&amp;M). Reduza sua conta de luz em até{" "}
+            <strong className="text-royal-800">95%</strong>.
           </motion.p>
 
           <motion.div
@@ -527,15 +531,25 @@ function StatStrip() {
 /* ------------------------------------------------------------------ */
 const SOLUCOES = [
   {
-    icon: Home,
-    title: "Energia solar residencial",
-    text: "Gere sua própria energia, elimine o susto na conta de luz e valorize seu imóvel com um sistema fotovoltaico sob medida.",
+    icon: Sun,
+    title: "Instalação de energia solar (On-Grid)",
+    text: "Sistemas fotovoltaicos para residências, comércios e indústrias conectadas à rede. A energia gerada abate direto na sua conta de luz.",
     tag: "Mais procurado",
   },
   {
-    icon: Factory,
-    title: "Solar para empresas e indústrias",
-    text: "Reduza o maior custo fixo do seu negócio. Projetos comerciais e industriais com retorno rápido e previsível.",
+    icon: Power,
+    title: "Solar Zero Grid",
+    text: "Para o Mercado Livre e unidades com restrição de injeção na rede. Opera sem exportar excedente à distribuidora, com controle de exportação.",
+  },
+  {
+    icon: BatteryCharging,
+    title: "Sistemas híbridos + baterias",
+    text: "Geração fotovoltaica combinada com baterias: energia armazenada para os horários de pico e continuidade no fornecimento em quedas de rede.",
+  },
+  {
+    icon: BatteryFull,
+    title: "BESS — Armazenamento de energia",
+    text: "Battery Energy Storage System para indústrias e grandes consumidores: corte de ponta, gestão de demanda e arbitragem de tarifa.",
   },
   {
     icon: TrendingUp,
@@ -544,9 +558,9 @@ const SOLUCOES = [
     tag: "Renda passiva",
   },
   {
-    icon: BrainCircuit,
-    title: "Soluções inteligentes de energia",
-    text: "Monitoramento em tempo real, gestão de consumo, armazenamento e eficiência energética com tecnologia integrada.",
+    icon: Wrench,
+    title: "O&M — Operação e manutenção",
+    text: "Manutenção de usinas solares: inspeções preventivas, limpeza especializada, termografia, monitoramento 24/7 e relatórios de desempenho.",
   },
 ];
 
@@ -556,10 +570,10 @@ function Solucoes() {
       <Container>
         <SectionHead
           eyebrow="O que fazemos"
-          title="Soluções completas em energia"
-          subtitle="Da sua casa à sua empresa, do consumo ao investimento — a Sousa Costa cuida de toda a jornada de energia renovável."
+          title="Soluções completas em energia solar"
+          subtitle="Instalação de energia solar, sistemas híbridos, BESS, usinas de investimento e manutenção (O&M) — do projeto à operação, em todo o Rio Grande do Norte."
         />
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {SOLUCOES.map((s, i) => (
             <Reveal key={s.title} delay={i * 0.08}>
               <div className="group relative h-full overflow-hidden rounded-3xl border border-royal-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-300 hover:shadow-glow">
@@ -1046,24 +1060,28 @@ function Projetos() {
 /* ------------------------------------------------------------------ */
 const FAQ = [
   {
+    q: "A Sousa Costa instala energia solar em todo o Rio Grande do Norte?",
+    a: "Sim. Atendemos residências, empresas e indústrias em todo o Rio Grande do Norte — de Natal e São Gonçalo do Amarante ao interior — com projeto, instalação e homologação completos.",
+  },
+  {
+    q: "O que é um sistema híbrido e o que é um BESS?",
+    a: "O sistema híbrido une painéis solares e baterias, garantindo energia armazenada para picos de consumo e quedas de rede. O BESS (Battery Energy Storage System) é o armazenamento em baterias para indústrias e grandes consumidores — corte de ponta, gestão de demanda e arbitragem de tarifa.",
+  },
+  {
+    q: "Vocês fazem manutenção (O&M) de usinas solares?",
+    a: "Sim. Nosso serviço de O&M inclui inspeções preventivas, limpeza especializada, análise termográfica, monitoramento 24/7 e relatórios de desempenho, prolongando a vida útil e a performance da usina.",
+  },
+  {
     q: "Preciso de telhado próprio para ter energia solar?",
     a: "Não necessariamente. Além dos sistemas instalados no seu telhado, você pode participar da nossa usina solar de investimento e receber os benefícios da geração sem instalar nada.",
   },
   {
     q: "Quanto tempo leva para começar a economizar?",
-    a: "Após a aprovação do projeto e homologação junto à distribuidora, o sistema entra em operação e a economia aparece já nas primeiras faturas.",
-  },
-  {
-    q: "Qual é a vida útil de um sistema solar?",
-    a: "Os painéis têm vida útil superior a 25 anos, com desempenho garantido por fabricantes. É um investimento de longo prazo com baixíssima manutenção.",
+    a: "Após a aprovação do projeto e a homologação junto à distribuidora, o sistema entra em operação e a economia aparece já nas primeiras faturas.",
   },
   {
     q: "Como funciona o investimento em usina solar?",
     a: "Você adquire uma cota de uma usina geradora e passa a receber a renda proporcional à energia produzida. Nossa equipe monta um plano conforme o seu objetivo.",
-  },
-  {
-    q: "A Sousa Costa cuida de toda a parte burocrática?",
-    a: "Sim. Cuidamos do projeto, da homologação, da instalação e da conexão com a distribuidora. Você acompanha tudo com transparência.",
   },
 ];
 
@@ -1122,10 +1140,12 @@ function FaqSection() {
 /*  Contato                                                            */
 /* ------------------------------------------------------------------ */
 const INTERESSES = [
-  "Energia solar residencial",
-  "Solar para empresa / indústria",
+  "Instalação de energia solar (residência/empresa)",
+  "Solar Zero Grid",
+  "Sistema híbrido + baterias",
+  "BESS — armazenamento de energia",
   "Usina solar de investimento",
-  "Soluções inteligentes de energia",
+  "O&M / Manutenção de usina",
 ];
 
 const inputCls =
@@ -1394,8 +1414,8 @@ function Footer() {
               className="h-14 w-auto sm:h-16"
             />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-royal-200">
-              Energias renováveis e soluções inteligentes de energia. Economia, sustentabilidade e renda para
-              residências, empresas e investidores.
+              Empresa de energia solar no Rio Grande do Norte: instalação de sistemas fotovoltaicos, usinas de
+              investimento, sistemas híbridos, BESS e manutenção (O&amp;M) para residências, empresas e indústrias.
             </p>
             <div className="mt-6 flex gap-3">
               <a
@@ -1442,16 +1462,20 @@ function Footer() {
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-widest text-brand-400">Soluções</p>
             <ul className="mt-4 space-y-2.5 text-sm text-royal-200">
-              <li>Energia solar residencial</li>
-              <li>Solar para empresas</li>
+              <li>Instalação de energia solar</li>
+              <li>Sistemas híbridos + baterias</li>
+              <li>BESS — armazenamento</li>
               <li>Usina de investimento</li>
-              <li>Soluções inteligentes</li>
+              <li>O&amp;M — manutenção</li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-royal-300 sm:flex-row">
-          <p>© {new Date().getFullYear()} Sousa Costa Energia. Todos os direitos reservados.</p>
+          <p>
+            © {new Date().getFullYear()} Sousa Costa LTDA · CNPJ 48.725.763/0001-26 · Rua Vitória, 17, Amarante — São
+            Gonçalo do Amarante/RN
+          </p>
           <p>Feito com energia limpa ⚡ e tecnologia.</p>
         </div>
       </Container>
