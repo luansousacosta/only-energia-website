@@ -219,7 +219,7 @@ function Header() {
           <img
             src="logo-sousa-costa.png"
             alt="Sousa Costa Energia"
-            className="h-11 w-auto object-contain sm:h-12"
+            className="h-12 w-auto object-contain sm:h-14"
           />
         </a>
 
@@ -1388,13 +1388,11 @@ function Footer() {
       <Container className="py-14">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-3">
-              <LogoBadge className="h-11 w-11" />
-              <div>
-                <p className="font-display text-lg font-extrabold leading-none">Sousa Costa</p>
-                <p className="text-xs font-semibold tracking-[0.3em] text-brand-400">ENERGIA</p>
-              </div>
-            </div>
+            <img
+              src="logo-sousa-costa-branca.png"
+              alt="Sousa Costa Energia"
+              className="h-14 w-auto sm:h-16"
+            />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-royal-200">
               Energias renováveis e soluções inteligentes de energia. Economia, sustentabilidade e renda para
               residências, empresas e investidores.
