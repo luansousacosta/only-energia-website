@@ -72,24 +72,25 @@ const wa = (msg) =>
   )}`;
 
 /*
- * Conversões do Google Ads (gtag.js carregado no index.html).
- * Cada rótulo corresponde a uma "ação de conversão" criada na conta.
+ * Rastreamento (gtag.js carregado no index.html):
+ *  - Google Ads: dispara a "ação de conversão" (send_to = ID/rótulo).
+ *  - Google Analytics 4: dispara o evento nomeado (analytics + remarketing).
  * O disparo é protegido (checa window.gtag) para não quebrar em dev.
  */
-const ADS_CONVERSOES = {
-  formulario: "AW-658673813/gC70CLS76c0cEJWhiroC",
-  whatsapp: "AW-658673813/m5MKCLe76c0cEJWhiroC",
+const CONVERSOES = {
+  // { adsSendTo: "AW-<id>/<rótulo>", ga4: "<nome do evento GA4>" }
+  formulario: { adsSendTo: "AW-658673813/gC70CLS76c0cEJWhiroC", ga4: "generate_lead" },
+  whatsapp: { adsSendTo: "AW-658673813/m5MKCLe76c0cEJWhiroC", ga4: "click_whatsapp" },
 };
 
 function registrarConversao(tipo, valor = 50) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
-  const send_to = ADS_CONVERSOES[tipo];
-  if (!send_to) return;
-  window.gtag("event", "conversion", {
-    send_to,
-    value: valor,
-    currency: "BRL",
-  });
+  const c = CONVERSOES[tipo];
+  if (!c) return;
+  // Conversão do Google Ads
+  window.gtag("event", "conversion", { send_to: c.adsSendTo, value: valor, currency: "BRL" });
+  // Evento do Google Analytics 4 (relatórios + públicos de remarketing)
+  window.gtag("event", c.ga4, { value: valor, currency: "BRL" });
 }
 
 /*
