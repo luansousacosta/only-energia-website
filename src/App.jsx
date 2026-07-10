@@ -72,6 +72,27 @@ const wa = (msg) =>
   )}`;
 
 /*
+ * Conversões do Google Ads (gtag.js carregado no index.html).
+ * Cada rótulo corresponde a uma "ação de conversão" criada na conta.
+ * O disparo é protegido (checa window.gtag) para não quebrar em dev.
+ */
+const ADS_CONVERSOES = {
+  formulario: "AW-658673813/gC70CLS76c0cEJWhiroC",
+  whatsapp: "AW-658673813/m5MKCLe76c0cEJWhiroC",
+};
+
+function registrarConversao(tipo, valor = 50) {
+  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  const send_to = ADS_CONVERSOES[tipo];
+  if (!send_to) return;
+  window.gtag("event", "conversion", {
+    send_to,
+    value: valor,
+    currency: "BRL",
+  });
+}
+
+/*
  * Envia o lead para o n8n → qualificação → card no Reonic.
  * Retorna { ok: true } em sucesso. Em caso de falha ou webhook não
  * configurado, retorna { ok: false } para acionar o fallback de WhatsApp,
@@ -1291,9 +1312,11 @@ function Contato({ conta = 600 }) {
 
     const res = await enviarLead(payload);
     if (res.ok) {
+      registrarConversao("formulario"); // conversão Google Ads: lead pelo formulário
       setStatus("success");
     } else {
       // Fallback: não perder o lead — abre o WhatsApp com os dados preenchidos.
+      registrarConversao("whatsapp"); // conversão Google Ads: lead direcionado ao WhatsApp
       setStatus("error");
       window.open(wa(textoWhats()), "_blank", "noopener,noreferrer");
     }
@@ -1613,6 +1636,17 @@ export default function App() {
   // Valor da conta compartilhado: o simulador atualiza e o formulário
   // de contato usa como dado de qualificação (pré-preenchido).
   const [conta, setConta] = useState(600);
+
+  // Rastreia como conversão do Google Ads qualquer clique em link de WhatsApp
+  // (wa.me) do site — CTAs, botão flutuante, cabeçalho, rodapé, etc.
+  useEffect(() => {
+    const onClick = (e) => {
+      const alvo = e.target.closest && e.target.closest('a[href*="wa.me"]');
+      if (alvo) registrarConversao("whatsapp");
+    };
+    document.addEventListener("click", onClick, true);
+    return () => document.removeEventListener("click", onClick, true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-royal-50/40 to-white font-sans text-royal-950">
