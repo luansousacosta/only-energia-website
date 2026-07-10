@@ -94,6 +94,39 @@ function registrarConversao(tipo, valor = 50) {
 }
 
 /*
+ * Rastreamento de fechamento (conversão offline do Google Ads).
+ * Ao chegar de um anúncio, a URL traz o GCLID (ID do clique). Guardamos por
+ * 90 dias e enviamos junto com o lead; quando o lead vira venda no Reonic,
+ * esse GCLID permite creditar a venda ao anúncio certo no Google Ads.
+ */
+const GCLID_CHAVE = "sc_gclid";
+const GCLID_VALIDADE_MS = 90 * 24 * 60 * 60 * 1000; // 90 dias
+
+function capturarGclid() {
+  if (typeof window === "undefined") return;
+  try {
+    const p = new URLSearchParams(window.location.search);
+    const gclid = p.get("gclid") || p.get("wbraid") || p.get("gbraid");
+    if (gclid) localStorage.setItem(GCLID_CHAVE, JSON.stringify({ gclid, ts: Date.now() }));
+  } catch (e) {
+    /* localStorage indisponível — ignora */
+  }
+}
+
+function obterGclid() {
+  if (typeof window === "undefined") return "";
+  try {
+    const raw = localStorage.getItem(GCLID_CHAVE);
+    if (!raw) return "";
+    const { gclid, ts } = JSON.parse(raw);
+    if (gclid && Date.now() - Number(ts || 0) < GCLID_VALIDADE_MS) return gclid;
+  } catch (e) {
+    /* ignora */
+  }
+  return "";
+}
+
+/*
  * Envia o lead para o n8n → qualificação → card no Reonic.
  * Retorna { ok: true } em sucesso. Em caso de falha ou webhook não
  * configurado, retorna { ok: false } para acionar o fallback de WhatsApp,
@@ -1309,6 +1342,7 @@ function Contato({ conta = 600 }) {
       consentimentoLGPD: form.consentimento,
       origem: "site-formulario",
       paginaUrl: typeof window !== "undefined" ? window.location.href : "",
+      gclid: obterGclid(), // ID do clique do anúncio — para creditar a venda depois
     };
 
     const res = await enviarLead(payload);
@@ -1637,6 +1671,12 @@ export default function App() {
   // Valor da conta compartilhado: o simulador atualiza e o formulário
   // de contato usa como dado de qualificação (pré-preenchido).
   const [conta, setConta] = useState(600);
+
+  // Captura o GCLID do anúncio (se houver na URL) logo na entrada, para
+  // creditar a venda ao anúncio certo quando o lead fechar no Reonic.
+  useEffect(() => {
+    capturarGclid();
+  }, []);
 
   // Rastreia como conversão do Google Ads qualquer clique em link de WhatsApp
   // (wa.me) do site — CTAs, botão flutuante, cabeçalho, rodapé, etc.
