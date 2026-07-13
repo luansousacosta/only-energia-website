@@ -46,7 +46,9 @@ import {
 /*  Dados de contato — edite aqui para atualizar o site inteiro        */
 /* ------------------------------------------------------------------ */
 const CONTATO = {
-  whatsapp: "5584991260677", // somente números, com DDI + DDD
+  whatsapp: "558491388651", // WhatsApp da Ágata (atendimento/qualificação) — só números, DDI+DDD
+  whatsappExibicao: "(84) 9138-8651",
+  telefone: "5584991260677", // número de ligação / pós-qualificação
   telefoneExibicao: "(84) 99126-0677",
   email: "contato@sousacosta.com.br",
   instagram: "https://www.instagram.com/sousacosta.energia",
@@ -1376,7 +1378,13 @@ function Contato({ conta = 600 }) {
                     <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
                       <MessageCircle className="h-5 w-5" />
                     </span>
-                    WhatsApp · {CONTATO.telefoneExibicao}
+                    WhatsApp · {CONTATO.whatsappExibicao}
+                  </a>
+                  <a href={`tel:+${CONTATO.telefone}`} className="flex items-center gap-3 hover:text-brand-300">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                      <Phone className="h-5 w-5" />
+                    </span>
+                    Ligações · {CONTATO.telefoneExibicao}
                   </a>
                   <a href={`mailto:${CONTATO.email}`} className="flex items-center gap-3 hover:text-brand-300">
                     <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
