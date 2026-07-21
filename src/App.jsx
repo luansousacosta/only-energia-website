@@ -232,6 +232,7 @@ const NAV = [
   { label: "Simulador", href: "#simulador" },
   { label: "Investimento", href: "#investimento" },
   { label: "Projetos", href: "#projetos" },
+  { label: "Galeria", href: "#galeria" },
   { label: "Contato", href: "#contato" },
 ];
 
@@ -993,22 +994,9 @@ function Diferenciais() {
 /*  Projetos realizados                                                */
 /* ------------------------------------------------------------------ */
 /*
- * Galeria de projetos — fotos E vídeos no mesmo grid.
- *
- * FOTO  → informe o campo `img` (arquivo em `public/projetos/`).
- * VÍDEO → informe o campo `youtube` com o ID do vídeo do YouTube.
- *         O ID é o trecho depois de "?v=" (ou depois de "youtu.be/" ou
- *         "/shorts/") na URL. Ex.: em https://youtu.be/AbCdEf12345 o ID é
- *         "AbCdEf12345". A miniatura é gerada automaticamente pelo YouTube;
- *         se quiser uma capa própria, informe também `img`.
- *
- * Exemplo de item de vídeo (é só copiar, trocar o ID e descomentar):
- *   { titulo: "Drone — UFV Cánada", local: "S. José do Mipibu · RN",
- *     tipo: "Usinas", potencia: "140 kWp", modulos: "200 módulos",
- *     extra: "Sobrevoo da usina em operação", youtube: "COLE_O_ID_AQUI" },
+ * Projetos reais extraídos da apresentação comercial. As fotos ficam em
+ * `public/projetos/`. Para adicionar/editar, basta atualizar os campos abaixo.
  */
-const ytThumb = (id) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
-
 const PROJETOS = [
   { titulo: "Complexo Ipiranga — UFV 1 a 5", local: "Guaíba · RS", tipo: "Destaque", potencia: "6,4 MWp", modulos: "13.500 módulos", extra: "Retrofit e recuperação de ativo", status: "Retrofit", img: "projetos/complexo-ipiranga.jpg" },
   { titulo: "UFV ADPaz", local: "Natal · RN", tipo: "Usinas", potencia: "110 kWp", modulos: "192 módulos", extra: "Autoconsumo remoto · retorno em 3,5 anos", img: "projetos/ufv-adpaz.jpg" },
@@ -1027,19 +1015,12 @@ const PORTFOLIO_NUMEROS = [
   { v: "9 MWp", l: "em O&M e monitoramento" },
 ];
 
-// A aba "Vídeos" só aparece quando existe pelo menos um item com `youtube`.
-const TEM_VIDEOS = PROJETOS.some((p) => p.youtube);
-const FILTROS = ["Todos", "Usinas", "Comercial", "Destaque", ...(TEM_VIDEOS ? ["Vídeos"] : [])];
+const FILTROS = ["Todos", "Usinas", "Comercial", "Destaque"];
 
 function Projetos() {
   const [filtro, setFiltro] = useState("Todos");
   const [aberto, setAberto] = useState(null);
-  const lista =
-    filtro === "Todos"
-      ? PROJETOS
-      : filtro === "Vídeos"
-      ? PROJETOS.filter((p) => p.youtube)
-      : PROJETOS.filter((p) => p.tipo === filtro);
+  const lista = filtro === "Todos" ? PROJETOS : PROJETOS.filter((p) => p.tipo === filtro);
 
   // Fecha o lightbox com a tecla Esc e trava o scroll do fundo enquanto aberto
   useEffect(() => {
@@ -1057,7 +1038,7 @@ function Projetos() {
     <section id="projetos" className="py-20 sm:py-28">
       <Container>
         <SectionHead
-          eyebrow="Portfólio · Galeria de projetos"
+          eyebrow="Portfólio · Projetos realizados"
           title="Usinas em operação, resultado comprovado"
           subtitle="Da viabilidade ao O&M, desenvolvemos e gerenciamos usinas solares como ativos de infraestrutura — no Rio Grande do Norte e além."
         />
@@ -1096,30 +1077,21 @@ function Projetos() {
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setAberto(p))}
-                aria-label={p.youtube ? `Assistir ao vídeo — ${p.titulo}` : `Ver foto ampliada — ${p.titulo}`}
+                aria-label={`Ver foto ampliada — ${p.titulo}`}
                 className="group relative h-full cursor-pointer overflow-hidden rounded-3xl border border-royal-100 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-royal-800">
                   <img
-                    src={p.img || ytThumb(p.youtube)}
+                    src={p.img}
                     alt={`${p.titulo} — ${p.local}`}
                     loading="lazy"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-royal-950 via-royal-950/55 to-royal-950/5" />
 
-                  {/* Botão de play central — só em itens de vídeo */}
-                  {p.youtube && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-xl shadow-brand-500/40 transition-transform duration-300 group-hover:scale-110">
-                        <Play className="h-7 w-7 translate-x-0.5 fill-current" />
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Indicador no canto — zoom (foto) ou play (vídeo) */}
+                  {/* Indicador de zoom */}
                   <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-royal-700 opacity-0 shadow-lg backdrop-blur transition-all duration-300 group-hover:opacity-100">
-                    {p.youtube ? <Play className="h-5 w-5 fill-current" /> : <ZoomIn className="h-5 w-5" />}
+                    <ZoomIn className="h-5 w-5" />
                   </div>
 
                   <div className="absolute left-4 top-4 flex flex-wrap gap-2">
@@ -1193,23 +1165,11 @@ function Projetos() {
               onClick={(e) => e.stopPropagation()}
               className="flex max-h-full w-full max-w-5xl flex-col items-center"
             >
-              {aberto.youtube ? (
-                <div className="aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${aberto.youtube}?autoplay=1&rel=0&modestbranding=1`}
-                    title={`${aberto.titulo} — ${aberto.local}`}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <img
-                  src={aberto.img}
-                  alt={`${aberto.titulo} — ${aberto.local}`}
-                  className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
-                />
-              )}
+              <img
+                src={aberto.img}
+                alt={`${aberto.titulo} — ${aberto.local}`}
+                className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+              />
               <figcaption className="mt-4 w-full max-w-3xl text-center text-white">
                 <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
                   <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700">
@@ -1234,6 +1194,200 @@ function Projetos() {
                   </span>
                 </div>
                 {aberto.extra && <p className="mt-1.5 text-xs text-white/60">{aberto.extra}</p>}
+              </figcaption>
+            </motion.figure>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Galeria — fotos e vídeos (seção própria, separada de Projetos)     */
+/* ------------------------------------------------------------------ */
+/*
+ * Galeria visual de fotos E vídeos. Cada item é uma FOTO ou um VÍDEO:
+ *
+ *   FOTO  → { tipo: "foto",  titulo, legenda, img: "galeria/arquivo.jpg" }
+ *           (coloque o arquivo em `public/galeria/` ou reaproveite os de
+ *            `public/projetos/`).
+ *
+ *   VÍDEO → { tipo: "video", titulo, legenda, youtube: "ID_DO_YOUTUBE" }
+ *           O ID é o trecho final da URL do YouTube:
+ *             https://youtu.be/AbCdEf12345              → "AbCdEf12345"
+ *             https://youtube.com/watch?v=AbCdEf12345   → "AbCdEf12345"
+ *             https://youtube.com/shorts/AbCdEf12345    → "AbCdEf12345"
+ *           A miniatura é gerada automaticamente pelo YouTube.
+ *
+ * Para adicionar um vídeo, é só copiar o exemplo comentado abaixo, trocar o
+ * ID e o texto, e tirar as barras "//".
+ */
+const ytThumb = (id) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+
+const GALERIA = [
+  // ——— VÍDEOS (descomente e troque o ID quando tiver os links do YouTube) ———
+  // { tipo: "video", titulo: "Sobrevoo de drone — UFV Cánada", legenda: "Usina em operação · S. José do Mipibu · RN", youtube: "COLE_O_ID_AQUI" },
+  // { tipo: "video", titulo: "Depoimento de cliente", legenda: "Resultado real depois da instalação", youtube: "COLE_O_ID_AQUI" },
+
+  // ——— FOTOS ———
+  { tipo: "foto", titulo: "Complexo Ipiranga", legenda: "UFV 1 a 5 · Guaíba · RS", img: "projetos/complexo-ipiranga.jpg" },
+  { tipo: "foto", titulo: "UFV ADPaz", legenda: "110 kWp · Natal · RN", img: "projetos/ufv-adpaz.jpg" },
+  { tipo: "foto", titulo: "UFV Cánada I", legenda: "140 kWp · S. José do Mipibu · RN", img: "projetos/ufv-canada-1.jpg" },
+  { tipo: "foto", titulo: "UFV Taipu III", legenda: "109,4 kWp · Taipu · RN", img: "projetos/ufv-taipu-3.jpg" },
+  { tipo: "foto", titulo: "UFV JR 01", legenda: "105 kWp · Nisía Floresta · RN", img: "projetos/ufv-jr01.jpg" },
+  { tipo: "foto", titulo: "Ampliação UFV Rio Verde", legenda: "37,5 kWp · Brejinho · RN", img: "projetos/rio-verde.jpg" },
+  { tipo: "foto", titulo: "UFV Cánada II", legenda: "140 kWp · em obras · RN", img: "projetos/ufv-canada-2.jpg" },
+  { tipo: "foto", titulo: "Fábrica Universo EPI", legenda: "12 kWp · Natal · RN", img: "projetos/universo-epi.jpg" },
+  { tipo: "foto", titulo: "Pousada do Jorge", legenda: "9,1 kWp · Riachuelo · RN", img: "projetos/pousada-jorge.jpg" },
+];
+
+// A aba "Vídeos" só aparece quando existe pelo menos um vídeo na galeria.
+const TEM_VIDEOS = GALERIA.some((g) => g.tipo === "video");
+const FILTROS_GALERIA = ["Todos", "Fotos", ...(TEM_VIDEOS ? ["Vídeos"] : [])];
+
+function Galeria() {
+  const [filtro, setFiltro] = useState("Todos");
+  const [aberto, setAberto] = useState(null);
+  const lista =
+    filtro === "Todos"
+      ? GALERIA
+      : filtro === "Fotos"
+      ? GALERIA.filter((g) => g.tipo === "foto")
+      : GALERIA.filter((g) => g.tipo === "video");
+
+  // Fecha com Esc e trava o scroll do fundo enquanto o lightbox está aberto
+  useEffect(() => {
+    if (!aberto) return;
+    const onKey = (e) => e.key === "Escape" && setAberto(null);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [aberto]);
+
+  return (
+    <section id="galeria" className="bg-royal-50/50 py-20 sm:py-28">
+      <Container>
+        <SectionHead
+          eyebrow="Galeria"
+          title="Veja de perto o nosso trabalho"
+          subtitle="Fotos e vídeos de usinas e instalações reais da Sousa Costa Energia — do telhado residencial às usinas de grande porte no Rio Grande do Norte."
+        />
+
+        {FILTROS_GALERIA.length > 1 && (
+          <div className="mb-10 flex flex-wrap justify-center gap-2">
+            {FILTROS_GALERIA.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFiltro(f)}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                  filtro === f
+                    ? "bg-royal-600 text-white shadow-lg shadow-royal-600/25"
+                    : "border border-royal-200 bg-white text-royal-700 hover:border-royal-300"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {lista.map((g, i) => {
+            const ehVideo = g.tipo === "video";
+            const capa = g.img || (ehVideo ? ytThumb(g.youtube) : undefined);
+            return (
+              <Reveal key={g.titulo + i} delay={(i % 4) * 0.06}>
+                <button
+                  type="button"
+                  onClick={() => setAberto(g)}
+                  aria-label={ehVideo ? `Assistir ao vídeo — ${g.titulo}` : `Ver foto ampliada — ${g.titulo}`}
+                  className="group relative block aspect-square w-full overflow-hidden rounded-2xl bg-royal-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <img
+                    src={capa}
+                    alt={`${g.titulo} — ${g.legenda}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-royal-950/85 via-royal-950/20 to-transparent" />
+
+                  {/* Botão de play — só em vídeos */}
+                  {ehVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-xl shadow-brand-500/40 transition-transform duration-300 group-hover:scale-110">
+                        <Play className="h-6 w-6 translate-x-0.5 fill-current" />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Etiqueta de tipo no canto */}
+                  <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-royal-700 opacity-0 shadow-lg backdrop-blur transition-all duration-300 group-hover:opacity-100">
+                    {ehVideo ? <Play className="h-4 w-4 fill-current" /> : <ZoomIn className="h-4 w-4" />}
+                  </span>
+
+                  {/* Legenda */}
+                  <div className="absolute inset-x-0 bottom-0 p-3 text-left text-white">
+                    <p className="font-display text-sm font-bold leading-tight">{g.titulo}</p>
+                    <p className="mt-0.5 text-xs text-white/70">{g.legenda}</p>
+                  </div>
+                </button>
+              </Reveal>
+            );
+          })}
+        </div>
+      </Container>
+
+      {/* Lightbox — vídeo do YouTube ou foto ampliada */}
+      <AnimatePresence>
+        {aberto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setAberto(null)}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-royal-950/90 p-4 backdrop-blur-sm sm:p-8"
+          >
+            <button
+              onClick={() => setAberto(null)}
+              aria-label="Fechar"
+              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-6 sm:top-6"
+            >
+              <X className="h-6 w-6" />
+            </button>
+
+            <motion.figure
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.94 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex max-h-full w-full max-w-5xl flex-col items-center"
+            >
+              {aberto.tipo === "video" ? (
+                <div className="aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${aberto.youtube}?autoplay=1&rel=0&modestbranding=1`}
+                    title={`${aberto.titulo} — ${aberto.legenda}`}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <img
+                  src={aberto.img}
+                  alt={`${aberto.titulo} — ${aberto.legenda}`}
+                  className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+                />
+              )}
+              <figcaption className="mt-4 text-center text-white">
+                <h3 className="font-display text-xl font-bold">{aberto.titulo}</h3>
+                <p className="mt-1 text-sm text-white/70">{aberto.legenda}</p>
               </figcaption>
             </motion.figure>
           </motion.div>
@@ -1750,6 +1904,7 @@ export default function App() {
         <Investimento />
         <ComoFunciona />
         <Projetos />
+        <Galeria />
         <Diferenciais />
         <FaqSection />
         <Contato conta={conta} />
