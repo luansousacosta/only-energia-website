@@ -168,9 +168,62 @@
         ]
       }
     </script>
+
+    <!-- Dados estruturados: Serviços por segmento (rich results) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        "name": "Serviços da Sousa Costa Energia",
+        "itemListElement": [
+          { "@type": "Service", "position": 1, "name": "Instalação de energia solar residencial", "serviceType": "Energia solar fotovoltaica residencial", "areaServed": { "@type": "State", "name": "Rio Grande do Norte" }, "provider": { "@id": "https://www.sousacosta.com.br/#organization" }, "url": "https://www.sousacosta.com.br/#solucoes", "description": "Projeto, instalação e homologação de sistemas fotovoltaicos para residências no RN, com economia de até 95% na conta de luz." },
+          { "@type": "Service", "position": 2, "name": "Energia solar para empresas e indústrias", "serviceType": "Energia solar comercial e industrial", "areaServed": { "@type": "State", "name": "Rio Grande do Norte" }, "provider": { "@id": "https://www.sousacosta.com.br/#organization" }, "url": "https://www.sousacosta.com.br/#solucoes", "description": "Sistemas fotovoltaicos para comércio, indústria e agronegócio, incluindo média tensão (Grupo A) e estudo de Mercado Livre de Energia." },
+          { "@type": "Service", "position": 3, "name": "Sistemas híbridos com baterias", "serviceType": "Energia solar híbrida com armazenamento", "areaServed": { "@type": "State", "name": "Rio Grande do Norte" }, "provider": { "@id": "https://www.sousacosta.com.br/#organization" }, "url": "https://www.sousacosta.com.br/#solucoes", "description": "Geração solar combinada com baterias para backup e autonomia, mantendo cargas críticas na falta de energia." },
+          { "@type": "Service", "position": 4, "name": "BESS — Armazenamento de energia", "serviceType": "Battery Energy Storage System (BESS)", "areaServed": { "@type": "State", "name": "Rio Grande do Norte" }, "provider": { "@id": "https://www.sousacosta.com.br/#organization" }, "url": "https://www.sousacosta.com.br/#solucoes", "description": "Armazenamento em baterias para indústrias e grandes consumidores: corte de ponta (peak shaving), gestão de demanda e arbitragem de tarifa." },
+          { "@type": "Service", "position": 5, "name": "Usina solar de investimento", "serviceType": "Geração compartilhada e renda passiva", "areaServed": { "@type": "State", "name": "Rio Grande do Norte" }, "provider": { "@id": "https://www.sousacosta.com.br/#organization" }, "url": "https://www.sousacosta.com.br/#investimento", "description": "Cotas de usina solar geradora com renda proporcional à energia produzida, sem precisar instalar nada." },
+          { "@type": "Service", "position": 6, "name": "Manutenção e O&M de usinas solares", "serviceType": "Operação e Manutenção (O&M) de usinas fotovoltaicas", "areaServed": { "@type": "State", "name": "Rio Grande do Norte" }, "provider": { "@id": "https://www.sousacosta.com.br/#organization" }, "url": "https://www.sousacosta.com.br/#solucoes", "description": "Inspeções preventivas, limpeza, análise termográfica, monitoramento 24/7 e reparo corretivo de usinas solares já instaladas." }
+        ]
+      }
+    </script>
+
+    <!-- Dados estruturados: Navegação (BreadcrumbList) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Início", "item": "https://www.sousacosta.com.br/#inicio" },
+          { "@type": "ListItem", "position": 2, "name": "Soluções", "item": "https://www.sousacosta.com.br/#solucoes" },
+          { "@type": "ListItem", "position": 3, "name": "Projetos realizados", "item": "https://www.sousacosta.com.br/#projetos" },
+          { "@type": "ListItem", "position": 4, "name": "Contato", "item": "https://www.sousacosta.com.br/#contato" }
+        ]
+      }
+    </script>
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      Conteúdo estático de SEO/fallback: fica no HTML "cru" (view-source) e é
+      lido por crawlers e leitores de link que não executam JavaScript.
+      O React substitui este bloco ao montar a aplicação (createRoot).
+    -->
+    <div id="root">
+      <div style="max-width:720px;margin:0 auto;padding:48px 20px;font-family:Inter,system-ui,sans-serif;color:#1e2233;line-height:1.5">
+        <h1 style="font-size:1.6rem;color:#3E4095;margin:0 0 12px">Sousa Costa Energia — Energia Solar no Rio Grande do Norte</h1>
+        <p>Empresa de energia solar no RN. Instalação de sistemas fotovoltaicos, sistemas híbridos com baterias, BESS (armazenamento de energia), usinas solares de investimento e manutenção (O&amp;M) para residências, empresas e indústrias. Economize até 95% na conta de luz.</p>
+        <h2 style="font-size:1.1rem;color:#3E4095;margin:20px 0 8px">Nossas soluções</h2>
+        <ul>
+          <li>Energia solar residencial — projeto, instalação e homologação</li>
+          <li>Energia solar para empresas e indústrias (inclusive Grupo A / Mercado Livre)</li>
+          <li>Sistemas híbridos com baterias (backup e autonomia)</li>
+          <li>BESS — armazenamento de energia (corte de ponta e gestão de demanda)</li>
+          <li>Usina solar de investimento (renda passiva / geração compartilhada)</li>
+          <li>Manutenção e O&amp;M de usinas solares (preventiva e corretiva)</li>
+        </ul>
+        <p>Atendemos Natal, São Gonçalo do Amarante e todo o Rio Grande do Norte.</p>
+        <p>WhatsApp (84) 9138-8651 · Ligações (84) 99126-0677 · contato@sousacosta.com.br</p>
+        <p style="color:#6b7280;font-size:.9rem">Carregando o site…</p>
+      </div>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

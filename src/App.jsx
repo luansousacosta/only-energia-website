@@ -40,6 +40,7 @@ import {
   BatteryFull,
   Power,
   ZoomIn,
+  Play,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -231,6 +232,7 @@ const NAV = [
   { label: "Simulador", href: "#simulador" },
   { label: "Investimento", href: "#investimento" },
   { label: "Projetos", href: "#projetos" },
+  { label: "Galeria", href: "#galeria" },
   { label: "Contato", href: "#contato" },
 ];
 
@@ -1202,6 +1204,322 @@ function Projetos() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Galeria — fotos e vídeos (seção própria, separada de Projetos)     */
+/* ------------------------------------------------------------------ */
+/*
+ * Galeria visual de fotos E vídeos. Cada item é uma FOTO ou um VÍDEO:
+ *
+ *   FOTO  → { tipo: "foto",  titulo, legenda, img: "galeria/arquivo.jpg" }
+ *           (coloque o arquivo em `public/galeria/` ou reaproveite os de
+ *            `public/projetos/`).
+ *
+ *   VÍDEO → { tipo: "video", titulo, legenda, youtube: "ID_DO_YOUTUBE" }
+ *           O ID é o trecho final da URL do YouTube:
+ *             https://youtu.be/AbCdEf12345              → "AbCdEf12345"
+ *             https://youtube.com/watch?v=AbCdEf12345   → "AbCdEf12345"
+ *             https://youtube.com/shorts/AbCdEf12345    → "AbCdEf12345"
+ *           A miniatura é gerada automaticamente pelo YouTube.
+ *
+ * Para adicionar um vídeo, é só copiar o exemplo comentado abaixo, trocar o
+ * ID e o texto, e tirar as barras "//".
+ */
+const ytThumb = (id) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+
+const GALERIA = [
+  // ——— VÍDEOS ———
+  { tipo: "video", titulo: "Sousa Costa Energia", legenda: "Projeto de energia solar em operação · RN", youtube: "7ujfIcEuUYQ" },
+  // { tipo: "video", titulo: "Depoimento de cliente", legenda: "Resultado real depois da instalação", youtube: "COLE_O_ID_AQUI" },
+
+  // ——— FOTOS ———
+  { tipo: "foto", titulo: "Complexo Ipiranga", legenda: "UFV 1 a 5 · Guaíba · RS", img: "projetos/complexo-ipiranga.jpg" },
+  { tipo: "foto", titulo: "UFV ADPaz", legenda: "110 kWp · Natal · RN", img: "projetos/ufv-adpaz.jpg" },
+  { tipo: "foto", titulo: "UFV Cánada I", legenda: "140 kWp · S. José do Mipibu · RN", img: "projetos/ufv-canada-1.jpg" },
+  { tipo: "foto", titulo: "UFV Taipu III", legenda: "109,4 kWp · Taipu · RN", img: "projetos/ufv-taipu-3.jpg" },
+  { tipo: "foto", titulo: "UFV JR 01", legenda: "105 kWp · Nisía Floresta · RN", img: "projetos/ufv-jr01.jpg" },
+  { tipo: "foto", titulo: "Ampliação UFV Rio Verde", legenda: "37,5 kWp · Brejinho · RN", img: "projetos/rio-verde.jpg" },
+  { tipo: "foto", titulo: "UFV Cánada II", legenda: "140 kWp · em obras · RN", img: "projetos/ufv-canada-2.jpg" },
+  { tipo: "foto", titulo: "Fábrica Universo EPI", legenda: "12 kWp · Natal · RN", img: "projetos/universo-epi.jpg" },
+  { tipo: "foto", titulo: "Pousada do Jorge", legenda: "9,1 kWp · Riachuelo · RN", img: "projetos/pousada-jorge.jpg" },
+];
+
+// A aba "Vídeos" só aparece quando existe pelo menos um vídeo na galeria.
+const TEM_VIDEOS = GALERIA.some((g) => g.tipo === "video");
+const FILTROS_GALERIA = ["Todos", "Fotos", ...(TEM_VIDEOS ? ["Vídeos"] : [])];
+
+// Capa do item: a foto informada, ou a miniatura automática do YouTube.
+const capaMidia = (g) => g.img || (g.tipo === "video" ? ytThumb(g.youtube) : undefined);
+
+// Trava o scroll do fundo e fecha com Esc enquanto um lightbox está aberto.
+function useLightboxKeys(aberto, setAberto) {
+  useEffect(() => {
+    if (!aberto) return;
+    const onKey = (e) => e.key === "Escape" && setAberto(null);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [aberto, setAberto]);
+}
+
+// Lightbox compartilhado (teaser + galeria completa): amplia foto ou toca vídeo.
+function LightboxMidia({ aberto, onClose }) {
+  return (
+    <AnimatePresence>
+      {aberto && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-royal-950/90 p-4 backdrop-blur-sm sm:p-8"
+        >
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-6 sm:top-6"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          <motion.figure
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex max-h-full w-full max-w-5xl flex-col items-center"
+          >
+            {aberto.tipo === "video" ? (
+              <div className="aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${aberto.youtube}?autoplay=1&rel=0&modestbranding=1`}
+                  title={`${aberto.titulo} — ${aberto.legenda}`}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <img
+                src={aberto.img}
+                alt={`${aberto.titulo} — ${aberto.legenda}`}
+                className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+              />
+            )}
+            <figcaption className="mt-4 text-center text-white">
+              <h3 className="font-display text-xl font-bold">{aberto.titulo}</h3>
+              <p className="mt-1 text-sm text-white/70">{aberto.legenda}</p>
+            </figcaption>
+          </motion.figure>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/*
+ * Teaser da galeria — fica no TOPO (logo após a faixa de números) para
+ * fisgar o visitante cedo com prova visual (vídeo + fotos reais) e reduzir a
+ * rejeição. Um vídeo abre e toca aqui mesmo; as fotos levam à galeria completa.
+ */
+function GaleriaDestaque() {
+  const [aberto, setAberto] = useState(null);
+  useLightboxKeys(aberto, setAberto);
+
+  const destaque = GALERIA.find((g) => g.tipo === "video") || GALERIA[0];
+  const tiles = GALERIA.filter((g) => g !== destaque).slice(0, 4);
+  const irGaleria = () =>
+    document.getElementById("galeria")?.scrollIntoView({ behavior: "smooth" });
+  const abrir = (g) => (g.tipo === "video" ? setAberto(g) : irGaleria());
+
+  return (
+    <section className="py-16 sm:py-20">
+      <Container>
+        <div className="mx-auto mb-8 max-w-2xl text-center">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-600">
+            <Sparkles className="h-3.5 w-3.5" /> Projetos reais · RN
+          </span>
+          <h2 className="font-display text-2xl font-extrabold text-royal-950 sm:text-3xl">
+            Veja usinas e instalações que já entregamos
+          </h2>
+          <p className="mt-2 text-royal-900/60">
+            Prova real do nosso trabalho — em operação, gerando economia.
+          </p>
+        </div>
+
+        {/* Destaque grande (vídeo ou foto principal) */}
+        <Reveal>
+          <button
+            type="button"
+            onClick={() => abrir(destaque)}
+            aria-label={destaque.tipo === "video" ? `Assistir ao vídeo — ${destaque.titulo}` : "Abrir a galeria completa"}
+            className="group relative block aspect-video w-full overflow-hidden rounded-3xl bg-royal-800 shadow-card transition-all duration-300 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <img
+              src={capaMidia(destaque)}
+              alt={`${destaque.titulo} — ${destaque.legenda}`}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-royal-950/85 via-royal-950/25 to-transparent" />
+            {destaque.tipo === "video" && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-xl shadow-brand-500/40 transition-transform duration-300 group-hover:scale-110">
+                  <Play className="h-9 w-9 translate-x-0.5 fill-current" />
+                </span>
+              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 p-5 text-left text-white sm:p-6">
+              <p className="font-display text-lg font-bold sm:text-xl">{destaque.titulo}</p>
+              <p className="mt-0.5 text-sm text-white/75">{destaque.legenda}</p>
+            </div>
+          </button>
+        </Reveal>
+
+        {/* 4 miniaturas */}
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {tiles.map((t, i) => {
+            const ehVideo = t.tipo === "video";
+            return (
+              <Reveal key={t.titulo + i} delay={i * 0.06}>
+                <button
+                  type="button"
+                  onClick={() => abrir(t)}
+                  aria-label={ehVideo ? `Assistir ao vídeo — ${t.titulo}` : "Abrir a galeria completa"}
+                  className="group relative block aspect-square w-full overflow-hidden rounded-2xl bg-royal-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <img
+                    src={capaMidia(t)}
+                    alt={`${t.titulo} — ${t.legenda}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-royal-950/80 via-royal-950/15 to-transparent" />
+                  {ehVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-lg transition-transform duration-300 group-hover:scale-110">
+                        <Play className="h-5 w-5 translate-x-0.5 fill-current" />
+                      </span>
+                    </div>
+                  )}
+                  <p className="absolute inset-x-0 bottom-0 p-2.5 text-left font-display text-xs font-bold text-white">
+                    {t.titulo}
+                  </p>
+                </button>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={irGaleria}
+            className="inline-flex items-center gap-2 rounded-full border-2 border-royal-200 bg-white px-7 py-3 font-bold text-royal-700 transition hover:border-royal-300 hover:bg-royal-50"
+          >
+            Ver galeria completa <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </Container>
+
+      <LightboxMidia aberto={aberto} onClose={() => setAberto(null)} />
+    </section>
+  );
+}
+
+function Galeria() {
+  const [filtro, setFiltro] = useState("Todos");
+  const [aberto, setAberto] = useState(null);
+  const lista =
+    filtro === "Todos"
+      ? GALERIA
+      : filtro === "Fotos"
+      ? GALERIA.filter((g) => g.tipo === "foto")
+      : GALERIA.filter((g) => g.tipo === "video");
+
+  useLightboxKeys(aberto, setAberto);
+
+  return (
+    <section id="galeria" className="bg-royal-50/50 py-20 sm:py-28">
+      <Container>
+        <SectionHead
+          eyebrow="Galeria"
+          title="Veja de perto o nosso trabalho"
+          subtitle="Fotos e vídeos de usinas e instalações reais da Sousa Costa Energia — do telhado residencial às usinas de grande porte no Rio Grande do Norte."
+        />
+
+        {FILTROS_GALERIA.length > 1 && (
+          <div className="mb-10 flex flex-wrap justify-center gap-2">
+            {FILTROS_GALERIA.map((f) => (
+              <button
+                key={f}
+                onClick={() => setFiltro(f)}
+                className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                  filtro === f
+                    ? "bg-royal-600 text-white shadow-lg shadow-royal-600/25"
+                    : "border border-royal-200 bg-white text-royal-700 hover:border-royal-300"
+                }`}
+              >
+                {f}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {lista.map((g, i) => {
+            const ehVideo = g.tipo === "video";
+            const capa = g.img || (ehVideo ? ytThumb(g.youtube) : undefined);
+            return (
+              <Reveal key={g.titulo + i} delay={(i % 4) * 0.06}>
+                <button
+                  type="button"
+                  onClick={() => setAberto(g)}
+                  aria-label={ehVideo ? `Assistir ao vídeo — ${g.titulo}` : `Ver foto ampliada — ${g.titulo}`}
+                  className="group relative block aspect-square w-full overflow-hidden rounded-2xl bg-royal-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <img
+                    src={capa}
+                    alt={`${g.titulo} — ${g.legenda}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-royal-950/85 via-royal-950/20 to-transparent" />
+
+                  {/* Botão de play — só em vídeos */}
+                  {ehVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-xl shadow-brand-500/40 transition-transform duration-300 group-hover:scale-110">
+                        <Play className="h-6 w-6 translate-x-0.5 fill-current" />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Etiqueta de tipo no canto */}
+                  <span className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-royal-700 opacity-0 shadow-lg backdrop-blur transition-all duration-300 group-hover:opacity-100">
+                    {ehVideo ? <Play className="h-4 w-4 fill-current" /> : <ZoomIn className="h-4 w-4" />}
+                  </span>
+
+                  {/* Legenda */}
+                  <div className="absolute inset-x-0 bottom-0 p-3 text-left text-white">
+                    <p className="font-display text-sm font-bold leading-tight">{g.titulo}</p>
+                    <p className="mt-0.5 text-xs text-white/70">{g.legenda}</p>
+                  </div>
+                </button>
+              </Reveal>
+            );
+          })}
+        </div>
+      </Container>
+
+      <LightboxMidia aberto={aberto} onClose={() => setAberto(null)} />
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  FAQ                                                                */
 /* ------------------------------------------------------------------ */
 const FAQ = [
@@ -1703,6 +2021,7 @@ export default function App() {
       <main>
         <Hero />
         <StatStrip />
+        <GaleriaDestaque />
         <Solucoes />
         <Simulador conta={conta} setConta={setConta} />
         <Investimento />
@@ -1710,6 +2029,7 @@ export default function App() {
         <Projetos />
         <Diferenciais />
         <FaqSection />
+        <Galeria />
         <Contato conta={conta} />
       </main>
       <Footer />
