@@ -1246,6 +1246,189 @@ const GALERIA = [
 const TEM_VIDEOS = GALERIA.some((g) => g.tipo === "video");
 const FILTROS_GALERIA = ["Todos", "Fotos", ...(TEM_VIDEOS ? ["Vídeos"] : [])];
 
+// Capa do item: a foto informada, ou a miniatura automática do YouTube.
+const capaMidia = (g) => g.img || (g.tipo === "video" ? ytThumb(g.youtube) : undefined);
+
+// Trava o scroll do fundo e fecha com Esc enquanto um lightbox está aberto.
+function useLightboxKeys(aberto, setAberto) {
+  useEffect(() => {
+    if (!aberto) return;
+    const onKey = (e) => e.key === "Escape" && setAberto(null);
+    document.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [aberto, setAberto]);
+}
+
+// Lightbox compartilhado (teaser + galeria completa): amplia foto ou toca vídeo.
+function LightboxMidia({ aberto, onClose }) {
+  return (
+    <AnimatePresence>
+      {aberto && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-royal-950/90 p-4 backdrop-blur-sm sm:p-8"
+        >
+          <button
+            onClick={onClose}
+            aria-label="Fechar"
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-6 sm:top-6"
+          >
+            <X className="h-6 w-6" />
+          </button>
+
+          <motion.figure
+            initial={{ opacity: 0, scale: 0.94 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            className="flex max-h-full w-full max-w-5xl flex-col items-center"
+          >
+            {aberto.tipo === "video" ? (
+              <div className="aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${aberto.youtube}?autoplay=1&rel=0&modestbranding=1`}
+                  title={`${aberto.titulo} — ${aberto.legenda}`}
+                  className="h-full w-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <img
+                src={aberto.img}
+                alt={`${aberto.titulo} — ${aberto.legenda}`}
+                className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+              />
+            )}
+            <figcaption className="mt-4 text-center text-white">
+              <h3 className="font-display text-xl font-bold">{aberto.titulo}</h3>
+              <p className="mt-1 text-sm text-white/70">{aberto.legenda}</p>
+            </figcaption>
+          </motion.figure>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/*
+ * Teaser da galeria — fica no TOPO (logo após a faixa de números) para
+ * fisgar o visitante cedo com prova visual (vídeo + fotos reais) e reduzir a
+ * rejeição. Um vídeo abre e toca aqui mesmo; as fotos levam à galeria completa.
+ */
+function GaleriaDestaque() {
+  const [aberto, setAberto] = useState(null);
+  useLightboxKeys(aberto, setAberto);
+
+  const destaque = GALERIA.find((g) => g.tipo === "video") || GALERIA[0];
+  const tiles = GALERIA.filter((g) => g !== destaque).slice(0, 4);
+  const irGaleria = () =>
+    document.getElementById("galeria")?.scrollIntoView({ behavior: "smooth" });
+  const abrir = (g) => (g.tipo === "video" ? setAberto(g) : irGaleria());
+
+  return (
+    <section className="py-16 sm:py-20">
+      <Container>
+        <div className="mx-auto mb-8 max-w-2xl text-center">
+          <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-600">
+            <Sparkles className="h-3.5 w-3.5" /> Projetos reais · RN
+          </span>
+          <h2 className="font-display text-2xl font-extrabold text-royal-950 sm:text-3xl">
+            Veja usinas e instalações que já entregamos
+          </h2>
+          <p className="mt-2 text-royal-900/60">
+            Prova real do nosso trabalho — em operação, gerando economia.
+          </p>
+        </div>
+
+        {/* Destaque grande (vídeo ou foto principal) */}
+        <Reveal>
+          <button
+            type="button"
+            onClick={() => abrir(destaque)}
+            aria-label={destaque.tipo === "video" ? `Assistir ao vídeo — ${destaque.titulo}` : "Abrir a galeria completa"}
+            className="group relative block aspect-video w-full overflow-hidden rounded-3xl bg-royal-800 shadow-card transition-all duration-300 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          >
+            <img
+              src={capaMidia(destaque)}
+              alt={`${destaque.titulo} — ${destaque.legenda}`}
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-royal-950/85 via-royal-950/25 to-transparent" />
+            {destaque.tipo === "video" && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="flex h-20 w-20 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-xl shadow-brand-500/40 transition-transform duration-300 group-hover:scale-110">
+                  <Play className="h-9 w-9 translate-x-0.5 fill-current" />
+                </span>
+              </div>
+            )}
+            <div className="absolute inset-x-0 bottom-0 p-5 text-left text-white sm:p-6">
+              <p className="font-display text-lg font-bold sm:text-xl">{destaque.titulo}</p>
+              <p className="mt-0.5 text-sm text-white/75">{destaque.legenda}</p>
+            </div>
+          </button>
+        </Reveal>
+
+        {/* 4 miniaturas */}
+        <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {tiles.map((t, i) => {
+            const ehVideo = t.tipo === "video";
+            return (
+              <Reveal key={t.titulo + i} delay={i * 0.06}>
+                <button
+                  type="button"
+                  onClick={() => abrir(t)}
+                  aria-label={ehVideo ? `Assistir ao vídeo — ${t.titulo}` : "Abrir a galeria completa"}
+                  className="group relative block aspect-square w-full overflow-hidden rounded-2xl bg-royal-800 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                >
+                  <img
+                    src={capaMidia(t)}
+                    alt={`${t.titulo} — ${t.legenda}`}
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-royal-950/80 via-royal-950/15 to-transparent" />
+                  {ehVideo && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-lg transition-transform duration-300 group-hover:scale-110">
+                        <Play className="h-5 w-5 translate-x-0.5 fill-current" />
+                      </span>
+                    </div>
+                  )}
+                  <p className="absolute inset-x-0 bottom-0 p-2.5 text-left font-display text-xs font-bold text-white">
+                    {t.titulo}
+                  </p>
+                </button>
+              </Reveal>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={irGaleria}
+            className="inline-flex items-center gap-2 rounded-full border-2 border-royal-200 bg-white px-7 py-3 font-bold text-royal-700 transition hover:border-royal-300 hover:bg-royal-50"
+          >
+            Ver galeria completa <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      </Container>
+
+      <LightboxMidia aberto={aberto} onClose={() => setAberto(null)} />
+    </section>
+  );
+}
+
 function Galeria() {
   const [filtro, setFiltro] = useState("Todos");
   const [aberto, setAberto] = useState(null);
@@ -1256,17 +1439,7 @@ function Galeria() {
       ? GALERIA.filter((g) => g.tipo === "foto")
       : GALERIA.filter((g) => g.tipo === "video");
 
-  // Fecha com Esc e trava o scroll do fundo enquanto o lightbox está aberto
-  useEffect(() => {
-    if (!aberto) return;
-    const onKey = (e) => e.key === "Escape" && setAberto(null);
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [aberto]);
+  useLightboxKeys(aberto, setAberto);
 
   return (
     <section id="galeria" className="bg-royal-50/50 py-20 sm:py-28">
@@ -1341,58 +1514,7 @@ function Galeria() {
         </div>
       </Container>
 
-      {/* Lightbox — vídeo do YouTube ou foto ampliada */}
-      <AnimatePresence>
-        {aberto && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            onClick={() => setAberto(null)}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-royal-950/90 p-4 backdrop-blur-sm sm:p-8"
-          >
-            <button
-              onClick={() => setAberto(null)}
-              aria-label="Fechar"
-              className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 sm:right-6 sm:top-6"
-            >
-              <X className="h-6 w-6" />
-            </button>
-
-            <motion.figure
-              initial={{ opacity: 0, scale: 0.94 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.94 }}
-              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-              onClick={(e) => e.stopPropagation()}
-              className="flex max-h-full w-full max-w-5xl flex-col items-center"
-            >
-              {aberto.tipo === "video" ? (
-                <div className="aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${aberto.youtube}?autoplay=1&rel=0&modestbranding=1`}
-                    title={`${aberto.titulo} — ${aberto.legenda}`}
-                    className="h-full w-full"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-              ) : (
-                <img
-                  src={aberto.img}
-                  alt={`${aberto.titulo} — ${aberto.legenda}`}
-                  className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
-                />
-              )}
-              <figcaption className="mt-4 text-center text-white">
-                <h3 className="font-display text-xl font-bold">{aberto.titulo}</h3>
-                <p className="mt-1 text-sm text-white/70">{aberto.legenda}</p>
-              </figcaption>
-            </motion.figure>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <LightboxMidia aberto={aberto} onClose={() => setAberto(null)} />
     </section>
   );
 }
@@ -1899,14 +2021,15 @@ export default function App() {
       <main>
         <Hero />
         <StatStrip />
+        <GaleriaDestaque />
         <Solucoes />
         <Simulador conta={conta} setConta={setConta} />
         <Investimento />
         <ComoFunciona />
         <Projetos />
-        <Galeria />
         <Diferenciais />
         <FaqSection />
+        <Galeria />
         <Contato conta={conta} />
       </main>
       <Footer />
