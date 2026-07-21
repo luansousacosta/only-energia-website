@@ -1226,8 +1226,8 @@ function Projetos() {
 const ytThumb = (id) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
 
 const GALERIA = [
-  // ——— VÍDEOS (descomente e troque o ID quando tiver os links do YouTube) ———
-  // { tipo: "video", titulo: "Sobrevoo de drone — UFV Cánada", legenda: "Usina em operação · S. José do Mipibu · RN", youtube: "COLE_O_ID_AQUI" },
+  // ——— VÍDEOS ———
+  { tipo: "video", titulo: "Sousa Costa Energia", legenda: "Projeto de energia solar em operação · RN", youtube: "7ujfIcEuUYQ" },
   // { tipo: "video", titulo: "Depoimento de cliente", legenda: "Resultado real depois da instalação", youtube: "COLE_O_ID_AQUI" },
 
   // ——— FOTOS ———
