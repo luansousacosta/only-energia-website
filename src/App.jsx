@@ -40,6 +40,7 @@ import {
   BatteryFull,
   Power,
   ZoomIn,
+  Play,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -992,9 +993,22 @@ function Diferenciais() {
 /*  Projetos realizados                                                */
 /* ------------------------------------------------------------------ */
 /*
- * Projetos reais extraídos da apresentação comercial. As fotos ficam em
- * `public/projetos/`. Para adicionar/editar, basta atualizar os campos abaixo.
+ * Galeria de projetos — fotos E vídeos no mesmo grid.
+ *
+ * FOTO  → informe o campo `img` (arquivo em `public/projetos/`).
+ * VÍDEO → informe o campo `youtube` com o ID do vídeo do YouTube.
+ *         O ID é o trecho depois de "?v=" (ou depois de "youtu.be/" ou
+ *         "/shorts/") na URL. Ex.: em https://youtu.be/AbCdEf12345 o ID é
+ *         "AbCdEf12345". A miniatura é gerada automaticamente pelo YouTube;
+ *         se quiser uma capa própria, informe também `img`.
+ *
+ * Exemplo de item de vídeo (é só copiar, trocar o ID e descomentar):
+ *   { titulo: "Drone — UFV Cánada", local: "S. José do Mipibu · RN",
+ *     tipo: "Usinas", potencia: "140 kWp", modulos: "200 módulos",
+ *     extra: "Sobrevoo da usina em operação", youtube: "COLE_O_ID_AQUI" },
  */
+const ytThumb = (id) => `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
+
 const PROJETOS = [
   { titulo: "Complexo Ipiranga — UFV 1 a 5", local: "Guaíba · RS", tipo: "Destaque", potencia: "6,4 MWp", modulos: "13.500 módulos", extra: "Retrofit e recuperação de ativo", status: "Retrofit", img: "projetos/complexo-ipiranga.jpg" },
   { titulo: "UFV ADPaz", local: "Natal · RN", tipo: "Usinas", potencia: "110 kWp", modulos: "192 módulos", extra: "Autoconsumo remoto · retorno em 3,5 anos", img: "projetos/ufv-adpaz.jpg" },
@@ -1013,12 +1027,19 @@ const PORTFOLIO_NUMEROS = [
   { v: "9 MWp", l: "em O&M e monitoramento" },
 ];
 
-const FILTROS = ["Todos", "Usinas", "Comercial", "Destaque"];
+// A aba "Vídeos" só aparece quando existe pelo menos um item com `youtube`.
+const TEM_VIDEOS = PROJETOS.some((p) => p.youtube);
+const FILTROS = ["Todos", "Usinas", "Comercial", "Destaque", ...(TEM_VIDEOS ? ["Vídeos"] : [])];
 
 function Projetos() {
   const [filtro, setFiltro] = useState("Todos");
   const [aberto, setAberto] = useState(null);
-  const lista = filtro === "Todos" ? PROJETOS : PROJETOS.filter((p) => p.tipo === filtro);
+  const lista =
+    filtro === "Todos"
+      ? PROJETOS
+      : filtro === "Vídeos"
+      ? PROJETOS.filter((p) => p.youtube)
+      : PROJETOS.filter((p) => p.tipo === filtro);
 
   // Fecha o lightbox com a tecla Esc e trava o scroll do fundo enquanto aberto
   useEffect(() => {
@@ -1036,7 +1057,7 @@ function Projetos() {
     <section id="projetos" className="py-20 sm:py-28">
       <Container>
         <SectionHead
-          eyebrow="Portfólio · Projetos realizados"
+          eyebrow="Portfólio · Galeria de projetos"
           title="Usinas em operação, resultado comprovado"
           subtitle="Da viabilidade ao O&M, desenvolvemos e gerenciamos usinas solares como ativos de infraestrutura — no Rio Grande do Norte e além."
         />
@@ -1075,21 +1096,30 @@ function Projetos() {
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), setAberto(p))}
-                aria-label={`Ver foto ampliada — ${p.titulo}`}
+                aria-label={p.youtube ? `Assistir ao vídeo — ${p.titulo}` : `Ver foto ampliada — ${p.titulo}`}
                 className="group relative h-full cursor-pointer overflow-hidden rounded-3xl border border-royal-100 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:shadow-glow focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden bg-royal-800">
                   <img
-                    src={p.img}
+                    src={p.img || ytThumb(p.youtube)}
                     alt={`${p.titulo} — ${p.local}`}
                     loading="lazy"
                     className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-royal-950 via-royal-950/55 to-royal-950/5" />
 
-                  {/* Indicador de zoom */}
+                  {/* Botão de play central — só em itens de vídeo */}
+                  {p.youtube && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-500/95 text-royal-950 shadow-xl shadow-brand-500/40 transition-transform duration-300 group-hover:scale-110">
+                        <Play className="h-7 w-7 translate-x-0.5 fill-current" />
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Indicador no canto — zoom (foto) ou play (vídeo) */}
                   <div className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-royal-700 opacity-0 shadow-lg backdrop-blur transition-all duration-300 group-hover:opacity-100">
-                    <ZoomIn className="h-5 w-5" />
+                    {p.youtube ? <Play className="h-5 w-5 fill-current" /> : <ZoomIn className="h-5 w-5" />}
                   </div>
 
                   <div className="absolute left-4 top-4 flex flex-wrap gap-2">
@@ -1163,11 +1193,23 @@ function Projetos() {
               onClick={(e) => e.stopPropagation()}
               className="flex max-h-full w-full max-w-5xl flex-col items-center"
             >
-              <img
-                src={aberto.img}
-                alt={`${aberto.titulo} — ${aberto.local}`}
-                className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
-              />
+              {aberto.youtube ? (
+                <div className="aspect-video w-full max-w-4xl overflow-hidden rounded-2xl bg-black shadow-2xl">
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${aberto.youtube}?autoplay=1&rel=0&modestbranding=1`}
+                    title={`${aberto.titulo} — ${aberto.local}`}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                </div>
+              ) : (
+                <img
+                  src={aberto.img}
+                  alt={`${aberto.titulo} — ${aberto.local}`}
+                  className="max-h-[78vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+                />
+              )}
               <figcaption className="mt-4 w-full max-w-3xl text-center text-white">
                 <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
                   <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-bold text-royal-700">
