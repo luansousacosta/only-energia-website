@@ -307,15 +307,17 @@ export default function Calculadora() {
 
     // Tarifas por posto (R$/kWh, já com tributos):
     //  cheia  = TUSD + TE (+ bandeira) — usada no consumo
-    //  fio    = parcela cobrada sobre a energia injetada:
-    //           Grupo B → TUSD_FioB exato · Grupo A → TUSD de energia (fio/perdas/encargos)
+    //  fio    = parcela cobrada sobre a energia INJETADA:
+    //           Grupo B → TUSD_FioB exato (× %transição).
+    //           Grupo A → 0: o Fio B do Grupo A é cobrado na DEMANDA, não na
+    //           energia; a energia injetada é compensada integralmente.
     //  credito= valor da energia injetada = cheia − fio × %transição
     const tarifasDe = (pk) => {
       const en = conf.energia[pk];
       if (!en) return null;
       const semImposto = rkwh(en.tusd + en.te);
       const cheia = rkwh(en.tusd + en.te + bandeiraMwh) * fatorTrib;
-      const fio = (isAg ? rkwh(en.tusd) : rkwh(en.fioB ?? 0)) * fatorTrib;
+      const fio = (isAg ? 0 : rkwh(en.fioB ?? 0)) * fatorTrib;
       return { semImposto, cheia, fio, tusd: en.tusd, te: en.te };
     };
 
@@ -325,11 +327,16 @@ export default function Calculadora() {
     let out;
     if (isAg) {
       /* ---------------- GRUPO A (por posto) ---------------- */
-      const isVerde = modOk === "VERDE";
+      const isVerdeA = modOk === "VERDE";
       const dem = conf.demanda; // { P, FP } (Azul) ou { NA } (Verde)
-      const custoDemanda = isVerde
+      const demFioB = conf.demandaFioB || {};
+      const custoDemanda = isVerdeA
         ? num(demandaUnica) * (dem.NA ?? 0)
         : num(demandaP) * (dem.P ?? 0) + num(demandaFP) * (dem.FP ?? 0);
+      // Fio B do Grupo A — cobrado na demanda (parcela TUSD_FioB da demanda)
+      const custoDemandaFioB = isVerdeA
+        ? num(demandaUnica) * (demFioB.NA ?? 0)
+        : num(demandaP) * (demFioB.P ?? 0) + num(demandaFP) * (demFioB.FP ?? 0);
 
       const cons = { P: num(consumoP), FP: num(consumoFP) };
       const inj = { P: num(injecaoP), FP: num(injecaoFP) };
@@ -367,6 +374,7 @@ export default function Calculadora() {
       out = {
         modoA: true,
         custoDemanda,
+        custoDemandaFioB,
         custoConsumo,
         creditoBruto,
         custoFioB: custoFio,
@@ -699,13 +707,20 @@ export default function Calculadora() {
 
                 <dl className="mt-5 space-y-2 border-t border-white/15 pt-4 text-sm">
                   <Row label="Crédito bruto da injeção" value={brl(r.creditoBruto)} light />
-                  <Row
-                    label={`${isA ? "Fio (TUSD) sobre a injeção" : "Fio B pago"} (${Math.round(
-                      r.pct * 100
-                    )}% · Lei 14.300)`}
-                    value={`− ${brl(r.custoFioB)}`}
-                    light
-                  />
+                  {isA ? (
+                    <Row
+                      label="Fio B — cobrado na demanda"
+                      value={brl(r.custoDemandaFioB)}
+                      light
+                      muted
+                    />
+                  ) : (
+                    <Row
+                      label={`Fio B pago (${Math.round(r.pct * 100)}% · Lei 14.300)`}
+                      value={`− ${brl(r.custoFioB)}`}
+                      light
+                    />
+                  )}
                   <Row
                     label="Tarifa energia injetada (SCEE)"
                     value={`${brl4(r.tarifaScee)}/kWh`}
@@ -725,12 +740,18 @@ export default function Calculadora() {
                   {r.modoA ? (
                     <>
                       <Row label="Demanda contratada" value={brl(r.custoDemanda)} />
+                      <Row
+                        label="↳ Fio B (cobrado na demanda)"
+                        value={brl(r.custoDemandaFioB)}
+                        muted
+                      />
                       <Row label="Energia consumida" value={brl(r.custoConsumo)} />
                       <Row
-                        label="Valoração da energia injetada"
+                        label="Energia injetada (compensada 100%)"
                         value={`− ${brl(r.creditoLiquido)}`}
                         accent
                       />
+                      <div className="my-2 border-t border-royal-100" />
                       <Row
                         label="Cobrança mínima — demanda"
                         value={brl(r.custoDemanda)}
@@ -805,9 +826,11 @@ export default function Calculadora() {
             Simulação com base nas Tabelas 1 e 2 da {META.resolucao} ({META.distribuidora}). Tarifas
             de TUSD e TE com tributos aplicados por dentro (ICMS 20% e PIS/COFINS 5% no padrão do RN,
             ajustáveis) e bandeira tarifária selecionável. A valoração da energia injetada segue a
-            regra de transição da Lei nº 14.300/2022 (Fio B): 2023 = 15% … 2029 = 100%. Para o Grupo
-            B, a cobrança mínima é o maior valor entre o custo de disponibilidade (30/50/100 kWh) e o
-            Fio B da energia injetada. Os resultados são estimativas para orientação comercial e não
+            regra de transição da Lei nº 14.300/2022 (Fio B): 2023 = 15% … 2029 = 100%. No Grupo B, o
+            Fio B incide sobre a energia injetada e a cobrança mínima é o maior valor entre o custo de
+            disponibilidade (30/50/100 kWh) e esse Fio B. No Grupo A, o Fio B é cobrado na demanda
+            (não na energia): a energia injetada é compensada integralmente e a demanda contratada é
+            faturada por completo. Os resultados são estimativas para orientação comercial e não
             substituem a fatura oficial da distribuidora.
           </p>
         </div>
