@@ -246,16 +246,20 @@ export default function Calculadora() {
   const [posto, setPosto] = useState("NA");
   const [ano, setAno] = useState(2026);
 
-  const [demanda, setDemanda] = useState("");
+  // Grupo B (posto único selecionado) — dados da fatura
   const [consumo, setConsumo] = useState("1000");
-  const [geracao, setGeracao] = useState("1000");
   const [injecao, setInjecao] = useState("400");
+  // Grupo A — demanda contratada e energia por posto (dados da fatura)
+  const [demandaP, setDemandaP] = useState("100");
+  const [demandaFP, setDemandaFP] = useState("100");
+  const [demandaUnica, setDemandaUnica] = useState("100"); // Verde: demanda única
+  const [consumoP, setConsumoP] = useState("2000");
+  const [consumoFP, setConsumoFP] = useState("8000");
+  const [injecaoP, setInjecaoP] = useState("0");
+  const [injecaoFP, setInjecaoFP] = useState("4000");
   const [ligacao, setLigacao] = useState("TRI");
   const [bandeira, setBandeira] = useState("VERDE");
 
-  // tarifas editáveis (R$/kWh) — preenchidas automaticamente, mas ajustáveis
-  const [tarifaNormalManual, setTarifaNormalManual] = useState(null);
-  const [tarifaSolarManual, setTarifaSolarManual] = useState(null);
   // Tributos (RN) — aplicados "por dentro". PIS/COFINS somados.
   const [icms, setIcms] = useState("20");
   const [pisCofins, setPisCofins] = useState("5");
@@ -278,142 +282,176 @@ export default function Calculadora() {
     const m = Object.keys(TARIFAS[g].subgrupos[s].modalidades)[0];
     setModalidade(m);
     setPosto(Object.keys(TARIFAS[g].subgrupos[s].modalidades[m].energia)[0]);
-    setTarifaNormalManual(null);
-    setTarifaSolarManual(null);
   };
   const onSub = (s) => {
     setSubgrupo(s);
     const m = Object.keys(subgrupos[s].modalidades)[0];
     setModalidade(m);
     setPosto(Object.keys(subgrupos[s].modalidades[m].energia)[0]);
-    setTarifaNormalManual(null);
-    setTarifaSolarManual(null);
   };
   const onMod = (m) => {
     setModalidade(m);
     setPosto(Object.keys(modalidades[m].energia)[0]);
-    setTarifaNormalManual(null);
-    setTarifaSolarManual(null);
   };
-  const onPosto = (p) => {
-    setPosto(p);
-    setTarifaNormalManual(null);
-    setTarifaSolarManual(null);
-  };
+  const onPosto = (p) => setPosto(p);
 
   /* --- cálculo --------------------------------------------------- */
   const r = useMemo(() => {
-    const en = conf.energia[postoOk];
-    const sc = conf.scee[postoOk];
     // Tributos "por dentro": tarifa_com_tributos = tarifa / (1 - (ICMS+PIS/COFINS))
     const aliqTotal = Math.min(0.99, Math.max(0, (num(icms) + num(pisCofins)) / 100));
     const fatorTrib = 1 / (1 - aliqTotal);
-
-    // Bandeira tarifária — adicional sobre a energia (R$/MWh)
+    // Bandeira tarifária — adicional sobre a energia consumida (R$/MWh)
     const bandeiraMwh = BANDEIRAS[bandeira]?.mwh ?? 0;
-
-    // Tarifa cheia da energia (R$/kWh) = (TUSD + TE + bandeira) já com tributos
-    const tarifaSemImposto = rkwh(en.tusd + en.te);
-    const tarifaCheia = rkwh(en.tusd + en.te + bandeiraMwh) * fatorTrib;
-
-    // Tarifa da energia injetada conforme resolução (SCEE)
-    const tarifaScee = rkwh(sc.tusd + sc.te) * fatorTrib;
-
-    // Fio B (parcela TUSD Distribuição) usada na valoração da injeção —
-    // valor exato da aba "TA - Aplicação" (coluna TUSD_FioB).
-    const fioB = rkwh(en.fioB ?? 0) * fatorTrib;
     const pct = TRANSICAO_FIO_B[ano] ?? 0.6;
+    const isAg = grupo === "A";
 
-    // Demanda (Grupo A)
-    const demTarifa =
-      grupo === "A"
-        ? conf.demanda[postoOk] ?? conf.demanda.NA ?? Object.values(conf.demanda)[0]
-        : 0;
-    const demKw = num(demanda);
-    const custoDemanda = demTarifa * demKw;
+    // Tarifas por posto (R$/kWh, já com tributos):
+    //  cheia  = TUSD + TE (+ bandeira) — usada no consumo
+    //  fio    = parcela cobrada sobre a energia injetada:
+    //           Grupo B → TUSD_FioB exato · Grupo A → TUSD de energia (fio/perdas/encargos)
+    //  credito= valor da energia injetada = cheia − fio × %transição
+    const tarifasDe = (pk) => {
+      const en = conf.energia[pk];
+      if (!en) return null;
+      const semImposto = rkwh(en.tusd + en.te);
+      const cheia = rkwh(en.tusd + en.te + bandeiraMwh) * fatorTrib;
+      const fio = (isAg ? rkwh(en.tusd) : rkwh(en.fioB ?? 0)) * fatorTrib;
+      return { semImposto, cheia, fio, tusd: en.tusd, te: en.te };
+    };
 
-    // Valores editáveis (usuário pode sobrescrever)
-    const tarifaNormal = tarifaNormalManual != null ? num(tarifaNormalManual) : tarifaCheia;
-    const tarifaSolar = tarifaSolarManual != null ? num(tarifaSolarManual) : tarifaCheia;
+    const scRef = conf.scee[postoOk];
+    const tarifaScee = rkwh((scRef?.tusd ?? 0) + (scRef?.te ?? 0)) * fatorTrib;
 
-    const kConsumo = num(consumo);
-    const kGeracao = num(geracao);
-    const kInjecao = Math.min(num(injecao), kGeracao);
-    const autoconsumo = Math.max(0, kGeracao - kInjecao); // energia solar usada na hora
+    let out;
+    if (isAg) {
+      /* ---------------- GRUPO A (por posto) ---------------- */
+      const isVerde = modOk === "VERDE";
+      const dem = conf.demanda; // { P, FP } (Azul) ou { NA } (Verde)
+      const custoDemanda = isVerde
+        ? num(demandaUnica) * (dem.NA ?? 0)
+        : num(demandaP) * (dem.P ?? 0) + num(demandaFP) * (dem.FP ?? 0);
 
-    // Sem solar: paga toda a energia consumida pela tarifa cheia + demanda
-    const contaSemSolar = kConsumo * tarifaNormal + custoDemanda;
+      const cons = { P: num(consumoP), FP: num(consumoFP) };
+      const inj = { P: num(injecaoP), FP: num(injecaoFP) };
 
-    // Energia solar autoconsumida — economiza 100% da tarifa cheia
-    const economiaAutoconsumo = autoconsumo * tarifaSolar;
+      let custoConsumo = 0;
+      let creditoBruto = 0;
+      let custoFio = 0;
+      const postosDet = [];
+      ["P", "FP"].forEach((pk) => {
+        const t = tarifasDe(pk);
+        if (!t) return;
+        const cConsumo = cons[pk] * t.cheia;
+        const cCredBruto = inj[pk] * t.cheia;
+        const cFio = inj[pk] * t.fio * pct;
+        custoConsumo += cConsumo;
+        creditoBruto += cCredBruto;
+        custoFio += cFio;
+        postosDet.push({
+          posto: pk,
+          consumo: cons[pk],
+          injecao: inj[pk],
+          tarifa: t.cheia,
+          custoConsumo: cConsumo,
+          creditoLiquido: cCredBruto - cFio,
+        });
+      });
 
-    // Valoração da energia injetada (Lei 14.300)
-    const creditoBruto = kInjecao * tarifaSolar; // crédito pela energia injetada
-    const custoFioB = kInjecao * fioB * pct; // parcela do fio paga sobre a injeção
-    const creditoLiquido = creditoBruto - custoFioB;
+      const creditoLiquido = creditoBruto - custoFio; // valor da energia injetada
+      // Energia: paga o consumo, abate a injeção (líquida do fio). Não fica negativa.
+      const energiaLiquida = Math.max(0, custoConsumo - creditoLiquido);
+      const contaComSolar = custoDemanda + energiaLiquida;
+      const contaSemSolar = custoDemanda + custoConsumo;
+      const economiaTotal = contaSemSolar - contaComSolar;
 
-    // Custo de disponibilidade (Grupo B) — consumo mínimo pela tarifa cheia
-    const minKwh = grupo === "B" ? LIGACOES[ligacao]?.kwh ?? 0 : 0;
-    const custoDisponibilidade = minKwh * tarifaCheia;
+      out = {
+        modoA: true,
+        custoDemanda,
+        custoConsumo,
+        creditoBruto,
+        custoFioB: custoFio,
+        creditoLiquido,
+        energiaLiquida,
+        contaSemSolar,
+        contaComSolar,
+        economiaTotal,
+        postosDet,
+        piso: custoDemanda,
+      };
+    } else {
+      /* ---------------- GRUPO B (posto único) ---------------- */
+      const t = tarifasDe(postoOk);
+      const tarifaCheia = t.cheia;
+      const kConsumo = num(consumo);
+      const kInjecao = num(injecao);
 
-    // PISO da fatura: Grupo A paga a demanda; Grupo B paga o MAIOR entre o
-    // custo de disponibilidade e o Fio B da energia injetada (regra Lei 14.300).
-    const piso =
-      grupo === "A" ? custoDemanda : Math.max(custoDisponibilidade, custoFioB);
-    const pisoFioBMaior = grupo === "B" && custoFioB >= custoDisponibilidade;
+      const valorConsumo = kConsumo * tarifaCheia; // energia consumida da rede
+      const creditoBruto = kInjecao * tarifaCheia; // compensação pela injeção
+      const custoFioB = kInjecao * t.fio * pct; // Fio B sobre a injeção
+      const creditoLiquido = creditoBruto - custoFioB;
 
-    // Balanço: abate a energia compensada e aplica o piso
-    const economiaCompensacao = economiaAutoconsumo + creditoBruto;
-    const contaLiquida = contaSemSolar - economiaCompensacao;
-    const contaComSolar = Math.max(contaLiquida, piso);
-    const economiaTotal = contaSemSolar - contaComSolar;
+      const minKwh = LIGACOES[ligacao]?.kwh ?? 0;
+      const custoDisponibilidade = minKwh * tarifaCheia;
+      // Regra Lei 14.300: cobrança mínima = maior entre disponibilidade e Fio B
+      const piso = Math.max(custoDisponibilidade, custoFioB);
+      const pisoFioBMaior = custoFioB >= custoDisponibilidade;
 
+      const contaLiquida = valorConsumo - creditoBruto;
+      const contaComSolar = Math.max(contaLiquida, piso);
+      const economiaTotal = valorConsumo - contaComSolar;
+
+      out = {
+        modoA: false,
+        tarifaCheia,
+        valorConsumo,
+        creditoBruto,
+        custoFioB,
+        creditoLiquido,
+        minKwh,
+        custoDisponibilidade,
+        piso,
+        pisoFioBMaior,
+        contaSemSolar: valorConsumo,
+        contaComSolar,
+        economiaTotal,
+      };
+    }
+
+    // Tarifa cheia de referência para exibição (posto selecionado)
+    const tRef = tarifasDe(postoOk) || { cheia: 0, semImposto: 0, fio: 0 };
     return {
-      tarifaCheia,
-      tarifaSemImposto,
-      tarifaScee,
-      tarifaSolar,
-      tarifaNormal,
+      ...out,
       aliqTotal,
       bandeiraMwh,
-      fioB,
       pct,
-      demTarifa,
-      custoDemanda,
-      kConsumo,
-      kGeracao,
-      kInjecao,
-      autoconsumo,
-      contaSemSolar,
-      economiaAutoconsumo,
-      creditoBruto,
-      custoFioB,
-      creditoLiquido,
-      minKwh,
-      custoDisponibilidade,
-      piso,
-      pisoFioBMaior,
-      economiaTotal,
-      contaComSolar,
+      tarifaScee,
+      tarifaCheiaRef: tRef.cheia,
+      tarifaSemImposto: tRef.semImposto,
+      fioRef: tRef.fio,
     };
   }, [
     conf,
     postoOk,
+    modOk,
     grupo,
-    demanda,
     consumo,
-    geracao,
     injecao,
+    demandaP,
+    demandaFP,
+    demandaUnica,
+    consumoP,
+    consumoFP,
+    injecaoP,
+    injecaoFP,
     ano,
     icms,
     pisCofins,
     ligacao,
     bandeira,
-    tarifaNormalManual,
-    tarifaSolarManual,
   ]);
 
   const isA = grupo === "A";
+  const isVerde = modOk === "VERDE";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-royal-50/40 to-white font-sans text-royal-950">
@@ -446,9 +484,10 @@ export default function Calculadora() {
             Calculadora de tarifas e valoração de energia
           </h1>
           <p className="mt-3 max-w-3xl text-royal-600">
-            Escolha o grupo e subgrupo tarifário, informe demanda, consumo e geração e veja o valor
-            da energia normal, da energia solar e da <strong>energia injetada</strong> conforme a
-            valoração da Lei nº 14.300/2022.
+            Escolha o grupo e subgrupo tarifário e informe os dados da fatura — energia{" "}
+            <strong>consumida</strong> e <strong>injetada</strong> (e a demanda, no Grupo A). A
+            calculadora mostra o valor da energia e a valoração da energia injetada conforme a Lei nº
+            14.300/2022.
           </p>
           <p className="mt-2 text-xs text-royal-400">
             Base tarifária: {META.resolucao} · {META.distribuidora} · vigência {META.vigencia}.
@@ -550,76 +589,69 @@ export default function Calculadora() {
               </div>
             </Card>
 
-            {/* Demanda / consumo / geração */}
+            {/* Dados da fatura */}
             <Card>
-              <CardTitle icon={Zap}>Demanda, consumo e geração</CardTitle>
-
-              {isA && (
-                <Field
-                  label="Demanda contratada (kW)"
-                  hint={`Tarifa de demanda: ${brl(r.demTarifa)}/kW`}
-                >
-                  <Input
-                    value={demanda}
-                    onChange={(e) => setDemanda(e.target.value)}
-                    placeholder="Ex.: 150"
-                    unit="kW"
-                  />
-                </Field>
-              )}
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Consumo da rede (kWh)">
-                  <Input
-                    value={consumo}
-                    onChange={(e) => setConsumo(e.target.value)}
-                    unit="kWh"
-                  />
-                </Field>
-                <Field label="Geração solar (kWh)">
-                  <Input
-                    value={geracao}
-                    onChange={(e) => setGeracao(e.target.value)}
-                    unit="kWh"
-                  />
-                </Field>
-                <Field label="Energia injetada (kWh)" hint="Excedente enviado à rede">
-                  <Input
-                    value={injecao}
-                    onChange={(e) => setInjecao(e.target.value)}
-                    unit="kWh"
-                  />
-                </Field>
-              </div>
-              <p className="mt-1 text-xs text-royal-400">
-                Autoconsumo instantâneo = geração − injeção ={" "}
-                <strong>{r.autoconsumo.toLocaleString("pt-BR")} kWh</strong>.
+              <CardTitle icon={Zap}>Dados da fatura</CardTitle>
+              <p className="-mt-2 mb-4 text-xs text-royal-400">
+                Informe os valores que aparecem na conta de energia: energia consumida da rede e
+                energia injetada. {isA ? "No Grupo A, separe por posto (ponta e fora de ponta)." : ""}
               </p>
+
+              {isA ? (
+                <>
+                  {/* Demanda contratada */}
+                  {isVerde ? (
+                    <Field label="Demanda contratada (kW)" hint="Verde: demanda única">
+                      <Input
+                        value={demandaUnica}
+                        onChange={(e) => setDemandaUnica(e.target.value)}
+                        unit="kW"
+                      />
+                    </Field>
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field label="Demanda contratada — Ponta (kW)">
+                        <Input value={demandaP} onChange={(e) => setDemandaP(e.target.value)} unit="kW" />
+                      </Field>
+                      <Field label="Demanda contratada — Fora ponta (kW)">
+                        <Input value={demandaFP} onChange={(e) => setDemandaFP(e.target.value)} unit="kW" />
+                      </Field>
+                    </div>
+                  )}
+
+                  <div className="my-3 border-t border-royal-100" />
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field label="Consumo — Ponta (kWh)">
+                      <Input value={consumoP} onChange={(e) => setConsumoP(e.target.value)} unit="kWh" />
+                    </Field>
+                    <Field label="Consumo — Fora ponta (kWh)">
+                      <Input value={consumoFP} onChange={(e) => setConsumoFP(e.target.value)} unit="kWh" />
+                    </Field>
+                    <Field label="Injeção — Ponta (kWh)">
+                      <Input value={injecaoP} onChange={(e) => setInjecaoP(e.target.value)} unit="kWh" />
+                    </Field>
+                    <Field label="Injeção — Fora ponta (kWh)">
+                      <Input value={injecaoFP} onChange={(e) => setInjecaoFP(e.target.value)} unit="kWh" />
+                    </Field>
+                  </div>
+                </>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Energia consumida da rede (kWh)">
+                    <Input value={consumo} onChange={(e) => setConsumo(e.target.value)} unit="kWh" />
+                  </Field>
+                  <Field label="Energia injetada (kWh)" hint="Excedente enviado à rede">
+                    <Input value={injecao} onChange={(e) => setInjecao(e.target.value)} unit="kWh" />
+                  </Field>
+                </div>
+              )}
             </Card>
 
-            {/* Tarifas */}
+            {/* Tributos */}
             <Card>
-              <CardTitle icon={ArrowLeftRight}>Valor da energia (R$/kWh)</CardTitle>
-              <p className="-mt-2 mb-3 text-xs text-royal-400">
-                Preenchido automaticamente pela tabela da resolução — ajuste se quiser usar valores
-                da sua fatura.
-              </p>
-
+              <CardTitle icon={ArrowLeftRight}>Tributos (por dentro)</CardTitle>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Energia normal (tarifa cheia)">
-                  <Input
-                    value={tarifaNormalManual != null ? tarifaNormalManual : r.tarifaCheia.toFixed(5)}
-                    onChange={(e) => setTarifaNormalManual(e.target.value)}
-                    unit="R$/kWh"
-                  />
-                </Field>
-                <Field label="Energia solar (crédito)">
-                  <Input
-                    value={tarifaSolarManual != null ? tarifaSolarManual : r.tarifaCheia.toFixed(5)}
-                    onChange={(e) => setTarifaSolarManual(e.target.value)}
-                    unit="R$/kWh"
-                  />
-                </Field>
                 <Field label="ICMS (RN)" hint="Aplicado por dentro sobre a tarifa">
                   <Input value={icms} onChange={(e) => setIcms(e.target.value)} unit="%" />
                 </Field>
@@ -630,12 +662,10 @@ export default function Calculadora() {
               <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-royal-400">
                   Tributos totais: <strong>{(r.aliqTotal * 100).toFixed(0)}%</strong> · tarifa sem
-                  impostos: {brl4(r.tarifaSemImposto)}/kWh
+                  impostos ({POSTO_LABEL[postoOk] || postoOk}): {brl4(r.tarifaSemImposto)}/kWh
                 </p>
                 <button
                   onClick={() => {
-                    setTarifaNormalManual(null);
-                    setTarifaSolarManual(null);
                     setIcms("20");
                     setPisCofins("5");
                   }}
@@ -670,7 +700,9 @@ export default function Calculadora() {
                 <dl className="mt-5 space-y-2 border-t border-white/15 pt-4 text-sm">
                   <Row label="Crédito bruto da injeção" value={brl(r.creditoBruto)} light />
                   <Row
-                    label={`Fio B pago (${Math.round(r.pct * 100)}% · Lei 14.300)`}
+                    label={`${isA ? "Fio (TUSD) sobre a injeção" : "Fio B pago"} (${Math.round(
+                      r.pct * 100
+                    )}% · Lei 14.300)`}
                     value={`− ${brl(r.custoFioB)}`}
                     light
                   />
@@ -690,53 +722,58 @@ export default function Calculadora() {
                 </p>
 
                 <dl className="mt-4 space-y-3 text-sm">
-                  <Row label="Energia normal (sem solar)" value={brl(r.contaSemSolar)} />
-                  {r.bandeiraMwh > 0 && (
-                    <Row
-                      label={`Bandeira ${BANDEIRAS[bandeira].label.split(" ")[0].toLowerCase()} (inclusa)`}
-                      value={`${brl4(rkwh(r.bandeiraMwh) / (1 - r.aliqTotal))}/kWh`}
-                      muted
-                    />
-                  )}
-                  {isA && (
-                    <Row label="Custo da demanda contratada" value={brl(r.custoDemanda)} />
-                  )}
-                  <Row
-                    label="Economia com autoconsumo"
-                    value={`− ${brl(r.economiaAutoconsumo)}`}
-                    accent
-                  />
-                  <Row
-                    label="Economia com energia injetada"
-                    value={`− ${brl(r.creditoBruto)}`}
-                    accent
-                  />
-                  <div className="my-2 border-t border-royal-100" />
-
-                  {/* Piso da fatura */}
-                  {isA ? (
-                    <Row label="Cobrança mínima — demanda" value={brl(r.custoDemanda)} />
+                  {r.modoA ? (
+                    <>
+                      <Row label="Demanda contratada" value={brl(r.custoDemanda)} />
+                      <Row label="Energia consumida" value={brl(r.custoConsumo)} />
+                      <Row
+                        label="Valoração da energia injetada"
+                        value={`− ${brl(r.creditoLiquido)}`}
+                        accent
+                      />
+                      <Row
+                        label="Cobrança mínima — demanda"
+                        value={brl(r.custoDemanda)}
+                        muted
+                      />
+                    </>
                   ) : (
-                    <div className="rounded-xl bg-royal-50 px-3 py-3">
-                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-royal-400">
-                        Cobrança mínima — maior entre:
-                      </p>
+                    <>
+                      <Row label="Energia consumida da rede" value={brl(r.valorConsumo)} />
+                      {r.bandeiraMwh > 0 && (
+                        <Row
+                          label={`Bandeira ${BANDEIRAS[bandeira].label.split(" ")[0].toLowerCase()} (inclusa)`}
+                          value={`${brl4(rkwh(r.bandeiraMwh) / (1 - r.aliqTotal))}/kWh`}
+                          muted
+                        />
+                      )}
                       <Row
-                        label={`Custo de disponibilidade (${r.minKwh} kWh)`}
-                        value={brl(r.custoDisponibilidade)}
-                        highlight={!r.pisoFioBMaior}
+                        label="Compensação da energia injetada"
+                        value={`− ${brl(r.creditoBruto)}`}
+                        accent
                       />
-                      <Row
-                        label={`Fio B da injeção (${Math.round(r.pct * 100)}%)`}
-                        value={brl(r.custoFioB)}
-                        highlight={r.pisoFioBMaior}
-                      />
-                    </div>
+                      <div className="my-2 border-t border-royal-100" />
+                      <div className="rounded-xl bg-royal-50 px-3 py-3">
+                        <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-royal-400">
+                          Cobrança mínima — maior entre:
+                        </p>
+                        <Row
+                          label={`Custo de disponibilidade (${r.minKwh} kWh)`}
+                          value={brl(r.custoDisponibilidade)}
+                          highlight={!r.pisoFioBMaior}
+                        />
+                        <Row
+                          label={`Fio B da injeção (${Math.round(r.pct * 100)}%)`}
+                          value={brl(r.custoFioB)}
+                          highlight={r.pisoFioBMaior}
+                        />
+                      </div>
+                    </>
                   )}
 
                   <div className="my-2 border-t border-royal-100" />
                   <Row
-                    label="Economia total estimada"
+                    label="Economia estimada"
                     value={brl(r.economiaTotal)}
                     big
                     accent
@@ -746,7 +783,8 @@ export default function Calculadora() {
 
                 <div className="mt-5 flex items-center gap-2 rounded-xl bg-brand-500/10 px-3 py-2.5 text-xs text-royal-600">
                   <Leaf className="h-4 w-4 shrink-0 text-brand-600" />
-                  Tarifa cheia da energia: <strong>{brl4(r.tarifaCheia)}/kWh</strong>
+                  Tarifa cheia da energia ({POSTO_LABEL[postoOk] || postoOk}):{" "}
+                  <strong>{brl4(r.tarifaCheiaRef)}/kWh</strong>
                 </div>
               </div>
 
