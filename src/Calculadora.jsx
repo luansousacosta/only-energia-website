@@ -237,7 +237,9 @@ export default function Calculadora() {
   // tarifas editáveis (R$/kWh) — preenchidas automaticamente, mas ajustáveis
   const [tarifaNormalManual, setTarifaNormalManual] = useState(null);
   const [tarifaSolarManual, setTarifaSolarManual] = useState(null);
-  const [icms, setIcms] = useState("0");
+  // Tributos (RN) — aplicados "por dentro". PIS/COFINS somados.
+  const [icms, setIcms] = useState("20");
+  const [pisCofins, setPisCofins] = useState("5");
 
   /* --- reconciliação das seleções em cascata --------------------- */
   const subgrupos = TARIFAS[grupo].subgrupos;
@@ -284,19 +286,21 @@ export default function Calculadora() {
   const r = useMemo(() => {
     const en = conf.energia[postoOk];
     const sc = conf.scee[postoOk];
-    const fatorIcms = 1 / (1 - Math.min(0.99, Math.max(0, num(icms) / 100)));
+    // Tributos "por dentro": tarifa_com_tributos = tarifa / (1 - (ICMS+PIS/COFINS))
+    const aliqTotal = Math.min(0.99, Math.max(0, (num(icms) + num(pisCofins)) / 100));
+    const fatorTrib = 1 / (1 - aliqTotal);
 
-    // Tarifa cheia da energia (R$/kWh) = TUSD + TE, opcionalmente com ICMS
+    // Tarifa cheia da energia (R$/kWh) = (TUSD + TE) já com tributos
     const tarifaCheiaBase = rkwh(en.tusd + en.te);
-    const tarifaCheia = tarifaCheiaBase * fatorIcms;
+    const tarifaCheia = tarifaCheiaBase * fatorTrib;
 
     // Tarifa da energia injetada conforme resolução (SCEE)
     const tarifaSceeBase = rkwh(sc.tusd + sc.te);
-    const tarifaScee = tarifaSceeBase * fatorIcms;
+    const tarifaScee = tarifaSceeBase * fatorTrib;
 
     // Fio B (parcela TUSD Distribuição) usada na valoração da injeção —
     // valor exato da aba "TA - Aplicação" (coluna TUSD_FioB).
-    const fioB = rkwh(en.fioB ?? 0) * fatorIcms;
+    const fioB = rkwh(en.fioB ?? 0) * fatorTrib;
     const pct = TRANSICAO_FIO_B[ano] ?? 0.6;
 
     // Demanda (Grupo A)
@@ -332,9 +336,11 @@ export default function Calculadora() {
 
     return {
       tarifaCheia,
+      tarifaCheiaBase,
       tarifaScee,
       tarifaSolar,
       tarifaNormal,
+      aliqTotal,
       fioB,
       pct,
       demTarifa,
@@ -361,6 +367,7 @@ export default function Calculadora() {
     injecao,
     ano,
     icms,
+    pisCofins,
     tarifaNormalManual,
     tarifaSolarManual,
   ]);
@@ -550,21 +557,29 @@ export default function Calculadora() {
                     unit="R$/kWh"
                   />
                 </Field>
-                <Field label="ICMS sobre a tarifa (%)" hint="Opcional — 0 usa tarifa sem tributos">
+                <Field label="ICMS (RN)" hint="Aplicado por dentro sobre a tarifa">
                   <Input value={icms} onChange={(e) => setIcms(e.target.value)} unit="%" />
                 </Field>
-                <div className="flex items-end">
-                  <button
-                    onClick={() => {
-                      setTarifaNormalManual(null);
-                      setTarifaSolarManual(null);
-                      setIcms("0");
-                    }}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-royal-200 px-3 py-2.5 text-sm font-semibold text-royal-600 transition hover:bg-royal-50"
-                  >
-                    <RotateCcw className="h-4 w-4" /> Restaurar tarifas oficiais
-                  </button>
-                </div>
+                <Field label="PIS + COFINS" hint="Somados — por dentro sobre a tarifa">
+                  <Input value={pisCofins} onChange={(e) => setPisCofins(e.target.value)} unit="%" />
+                </Field>
+              </div>
+              <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs text-royal-400">
+                  Tributos totais: <strong>{(r.aliqTotal * 100).toFixed(0)}%</strong> · tarifa sem
+                  impostos: {brl4(r.tarifaCheiaBase)}/kWh
+                </p>
+                <button
+                  onClick={() => {
+                    setTarifaNormalManual(null);
+                    setTarifaSolarManual(null);
+                    setIcms("20");
+                    setPisCofins("5");
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-royal-200 px-3 py-2 text-xs font-semibold text-royal-600 transition hover:bg-royal-50"
+                >
+                  <RotateCcw className="h-3.5 w-3.5" /> Restaurar padrão
+                </button>
               </div>
             </Card>
           </div>
@@ -656,11 +671,11 @@ export default function Calculadora() {
         <div className="mt-10 flex gap-3 rounded-2xl border border-royal-100 bg-royal-50/50 p-5 text-xs leading-relaxed text-royal-500">
           <Info className="h-5 w-5 shrink-0 text-royal-400" />
           <p>
-            Simulação com base nas Tabelas 1 e 2 da {META.resolucao} ({META.distribuidora}). Valores
-            de TUSD e TE em base tarifária, sem bandeiras e — por padrão — sem tributos (PIS/COFINS e
-            ICMS). A valoração da energia injetada segue a regra de transição da Lei nº 14.300/2022
-            (Fio B): 2023 = 15% … 2029 = 100%. Os resultados são estimativas para orientação
-            comercial e não substituem a fatura oficial da distribuidora.
+            Simulação com base nas Tabelas 1 e 2 da {META.resolucao} ({META.distribuidora}). Tarifas
+            de TUSD e TE com tributos aplicados por dentro (ICMS 20% e PIS/COFINS 5% no padrão do RN,
+            ajustáveis) e sem bandeiras tarifárias. A valoração da energia injetada segue a regra de
+            transição da Lei nº 14.300/2022 (Fio B): 2023 = 15% … 2029 = 100%. Os resultados são
+            estimativas para orientação comercial e não substituem a fatura oficial da distribuidora.
           </p>
         </div>
       </main>
