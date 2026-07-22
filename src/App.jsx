@@ -41,6 +41,7 @@ import {
   Power,
   ZoomIn,
   Play,
+  Calculator,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -54,6 +55,8 @@ const CONTATO = {
   email: "contato@sousacosta.com.br",
   instagram: "https://www.instagram.com/sousacosta.energia",
   cidade: "São Gonçalo do Amarante · RN — atendemos todo o RN",
+  // Calculadora de proposta rápida (app independente, no subdomínio).
+  calculadora: "https://calculadora.sousacosta.com.br/",
 };
 
 /*
@@ -84,14 +87,20 @@ const CONVERSOES = {
   // { adsSendTo: "AW-<id>/<rótulo>", ga4: "<nome do evento GA4>" }
   formulario: { adsSendTo: "AW-658673813/gC70CLS76c0cEJWhiroC", ga4: "generate_lead" },
   whatsapp: { adsSendTo: "AW-658673813/m5MKCLe76c0cEJWhiroC", ga4: "click_whatsapp" },
+  // Clique em "Proposta rápida" (calculadora). Sem rótulo do Google Ads por
+  // enquanto — só evento GA4; crie uma ação de conversão no Ads e adicione o
+  // adsSendTo aqui depois, se quiser contar como conversão paga.
+  calculadora: { ga4: "click_proposta_rapida" },
 };
 
 function registrarConversao(tipo, valor = 50) {
   if (typeof window === "undefined" || typeof window.gtag !== "function") return;
   const c = CONVERSOES[tipo];
   if (!c) return;
-  // Conversão do Google Ads
-  window.gtag("event", "conversion", { send_to: c.adsSendTo, value: valor, currency: "BRL" });
+  // Conversão do Google Ads (só se houver rótulo configurado para este tipo)
+  if (c.adsSendTo) {
+    window.gtag("event", "conversion", { send_to: c.adsSendTo, value: valor, currency: "BRL" });
+  }
   // Evento do Google Analytics 4 (relatórios + públicos de remarketing)
   window.gtag("event", c.ga4, { value: valor, currency: "BRL" });
 }
@@ -313,6 +322,16 @@ function Header() {
 
         <div className="flex items-center gap-3">
           <a
+            href={CONTATO.calculadora}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => registrarConversao("calculadora")}
+            className="hidden items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400 lg:inline-flex"
+          >
+            <Calculator className="h-4 w-4" />
+            Proposta rápida
+          </a>
+          <a
             href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
             target="_blank"
             rel="noreferrer"
@@ -351,10 +370,19 @@ function Header() {
                 </a>
               ))}
               <a
+                href={CONTATO.calculadora}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => { registrarConversao("calculadora"); setOpen(false); }}
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 font-bold text-royal-950"
+              >
+                <Calculator className="h-4 w-4" /> Proposta rápida
+              </a>
+              <a
                 href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-royal-600 px-4 py-3 font-semibold text-white"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-royal-600 px-4 py-3 font-semibold text-white"
               >
                 <MessageCircle className="h-4 w-4" /> Fale conosco
               </a>
