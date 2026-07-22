@@ -1,0 +1,746 @@
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  Zap,
+  Gauge,
+  Sun,
+  ArrowLeftRight,
+  ArrowLeft,
+  Info,
+  Calculator,
+  Building2,
+  Home,
+  RotateCcw,
+  Leaf,
+} from "lucide-react";
+
+/* ================================================================== *
+ *  DADOS TARIFÁRIOS OFICIAIS
+ *  Fonte: ANEEL — Resolução Homologatória nº 3.573, de 22/04/2026
+ *  Distribuidora: Neoenergia Cosern (Rio Grande do Norte)
+ *  Vigência: 22/04/2026 a 21/04/2027
+ *
+ *  Valores de TUSD (demanda em R$/kW) e TUSD+TE (energia em R$/MWh)
+ *  extraídos das Tabelas 1 (Grupo A) e 2 (Grupo B) da Resolução.
+ *  As linhas "SCEE" representam a tarifa aplicada ao faturamento da
+ *  energia compensada (injetada) — Sistema de Compensação de Energia
+ *  Elétrica, Lei nº 14.300/2022.
+ * ================================================================== */
+
+const META = {
+  distribuidora: "Neoenergia Cosern — Rio Grande do Norte",
+  resolucao: "Resolução Homologatória ANEEL nº 3.573/2026",
+  vigencia: "22/04/2026 a 21/04/2027",
+};
+
+// energia: { tusd, te } em R$/MWh · demanda em R$/kW · scee: tarifa da energia injetada (R$/MWh)
+const TARIFAS = {
+  A: {
+    label: "Grupo A — média/alta tensão (com demanda)",
+    subgrupos: {
+      A2: {
+        label: "A2 · 88 a 138 kV",
+        modalidades: {
+          AZUL: {
+            demanda: { P: 26.36, FP: 12.08 },
+            energia: { P: { tusd: 67.53, te: 494.6 }, FP: { tusd: 67.53, te: 291.65 } },
+            scee: { P: { tusd: 67.53, te: 9.76 }, FP: { tusd: 67.53, te: 9.76 } },
+          },
+        },
+      },
+      A3: {
+        label: "A3 · 69 kV",
+        modalidades: {
+          AZUL: {
+            demanda: { P: 29.23, FP: 15.05 },
+            energia: { P: { tusd: 68.14, te: 494.6 }, FP: { tusd: 68.14, te: 291.65 } },
+            scee: { P: { tusd: 68.14, te: 9.76 }, FP: { tusd: 68.14, te: 9.76 } },
+          },
+        },
+      },
+      A4: {
+        label: "A3a / A4 · 2,3 a 25 kV",
+        modalidades: {
+          AZUL: {
+            demanda: { P: 77.92, FP: 32.0 },
+            energia: { P: { tusd: 117.19, te: 485.53 }, FP: { tusd: 117.19, te: 282.57 } },
+            scee: { P: { tusd: 117.19, te: 0.69 }, FP: { tusd: 117.19, te: 0.69 } },
+          },
+          VERDE: {
+            demanda: { NA: 32.0 },
+            energia: { P: { tusd: 2009.69, te: 485.53 }, FP: { tusd: 117.19, te: 282.57 } },
+            scee: { P: { tusd: 2009.69, te: 0.69 }, FP: { tusd: 117.19, te: 0.69 } },
+          },
+        },
+      },
+    },
+  },
+  B: {
+    label: "Grupo B — baixa tensão (sem demanda)",
+    subgrupos: {
+      B1: {
+        label: "B1 · Residencial",
+        modalidades: {
+          CONVENCIONAL: {
+            energia: { NA: { tusd: 482.36, te: 293.44 } },
+            scee: { NA: { tusd: 482.36, te: -5.36 } },
+          },
+          BRANCA: {
+            energia: {
+              P: { tusd: 1190.91, te: 479.48 },
+              INT: { tusd: 781.52, te: 276.53 },
+              FP: { tusd: 372.14, te: 276.53 },
+            },
+            scee: {
+              P: { tusd: 1190.91, te: -5.36 },
+              INT: { tusd: 781.52, te: -5.36 },
+              FP: { tusd: 372.14, te: -5.36 },
+            },
+          },
+        },
+      },
+      B2: {
+        label: "B2 · Rural",
+        modalidades: {
+          CONVENCIONAL: {
+            energia: { NA: { tusd: 482.36, te: 293.44 } },
+            scee: { NA: { tusd: 482.36, te: -5.36 } },
+          },
+          BRANCA: {
+            energia: {
+              P: { tusd: 1206.65, te: 479.48 },
+              INT: { tusd: 790.97, te: 276.53 },
+              FP: { tusd: 375.29, te: 276.53 },
+            },
+            scee: {
+              P: { tusd: 1206.65, te: -5.36 },
+              INT: { tusd: 790.97, te: -5.36 },
+              FP: { tusd: 375.29, te: -5.36 },
+            },
+          },
+        },
+      },
+      B3: {
+        label: "B3 · Comercial / Industrial / Demais",
+        modalidades: {
+          CONVENCIONAL: {
+            energia: { NA: { tusd: 482.36, te: 293.44 } },
+            scee: { NA: { tusd: 482.36, te: -5.36 } },
+          },
+          BRANCA: {
+            energia: {
+              P: { tusd: 1175.16, te: 479.48 },
+              INT: { tusd: 772.08, te: 276.53 },
+              FP: { tusd: 368.99, te: 276.53 },
+            },
+            scee: {
+              P: { tusd: 1175.16, te: -5.36 },
+              INT: { tusd: 772.08, te: -5.36 },
+              FP: { tusd: 368.99, te: -5.36 },
+            },
+          },
+        },
+      },
+      B4: {
+        label: "B4 · Iluminação Pública",
+        modalidades: {
+          "B4a — Rede de distribuição": {
+            energia: { NA: { tusd: 265.3, te: 161.39 } },
+            scee: { NA: { tusd: 265.3, te: -5.36 } },
+          },
+          "B4b — Bulbo de lâmpada": {
+            energia: { NA: { tusd: 289.42, te: 176.06 } },
+            scee: { NA: { tusd: 289.42, te: -5.36 } },
+          },
+        },
+      },
+    },
+  },
+};
+
+// Percentual do "Fio B" (TUSD Distribuição) pago sobre a energia INJETADA —
+// regra de transição da Lei nº 14.300/2022 para geração distribuída.
+const TRANSICAO_FIO_B = {
+  2023: 0.15,
+  2024: 0.3,
+  2025: 0.45,
+  2026: 0.6,
+  2027: 0.75,
+  2028: 0.9,
+  2029: 1.0,
+};
+
+const POSTO_LABEL = {
+  P: "Ponta",
+  FP: "Fora de ponta",
+  INT: "Intermediário",
+  NA: "Único (sem posto)",
+};
+
+/* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+const brl = (v) =>
+  new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+    Number.isFinite(v) ? v : 0
+  );
+const brl4 = (v) =>
+  new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4,
+  }).format(Number.isFinite(v) ? v : 0);
+
+// R$/MWh -> R$/kWh
+const rkwh = (mwh) => mwh / 1000;
+
+const num = (v) => {
+  const n = parseFloat(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+};
+
+/* ================================================================== *
+ *  Componente principal
+ * ================================================================== */
+export default function Calculadora() {
+  const [grupo, setGrupo] = useState("B");
+  const [subgrupo, setSubgrupo] = useState("B3");
+  const [modalidade, setModalidade] = useState("CONVENCIONAL");
+  const [posto, setPosto] = useState("NA");
+  const [ano, setAno] = useState(2026);
+
+  const [demanda, setDemanda] = useState("");
+  const [consumo, setConsumo] = useState("1000");
+  const [geracao, setGeracao] = useState("1000");
+  const [injecao, setInjecao] = useState("400");
+
+  // tarifas editáveis (R$/kWh) — preenchidas automaticamente, mas ajustáveis
+  const [tarifaNormalManual, setTarifaNormalManual] = useState(null);
+  const [tarifaSolarManual, setTarifaSolarManual] = useState(null);
+  const [icms, setIcms] = useState("0");
+
+  /* --- reconciliação das seleções em cascata --------------------- */
+  const subgrupos = TARIFAS[grupo].subgrupos;
+  const subKeys = Object.keys(subgrupos);
+  const subOk = subKeys.includes(subgrupo) ? subgrupo : subKeys[0];
+  const modalidades = subgrupos[subOk].modalidades;
+  const modKeys = Object.keys(modalidades);
+  const modOk = modKeys.includes(modalidade) ? modalidade : modKeys[0];
+  const conf = modalidades[modOk];
+  const postoKeys = Object.keys(conf.energia);
+  const postoOk = postoKeys.includes(posto) ? posto : postoKeys[0];
+
+  const onGrupo = (g) => {
+    setGrupo(g);
+    const s = Object.keys(TARIFAS[g].subgrupos)[0];
+    setSubgrupo(s);
+    const m = Object.keys(TARIFAS[g].subgrupos[s].modalidades)[0];
+    setModalidade(m);
+    setPosto(Object.keys(TARIFAS[g].subgrupos[s].modalidades[m].energia)[0]);
+    setTarifaNormalManual(null);
+    setTarifaSolarManual(null);
+  };
+  const onSub = (s) => {
+    setSubgrupo(s);
+    const m = Object.keys(subgrupos[s].modalidades)[0];
+    setModalidade(m);
+    setPosto(Object.keys(subgrupos[s].modalidades[m].energia)[0]);
+    setTarifaNormalManual(null);
+    setTarifaSolarManual(null);
+  };
+  const onMod = (m) => {
+    setModalidade(m);
+    setPosto(Object.keys(modalidades[m].energia)[0]);
+    setTarifaNormalManual(null);
+    setTarifaSolarManual(null);
+  };
+  const onPosto = (p) => {
+    setPosto(p);
+    setTarifaNormalManual(null);
+    setTarifaSolarManual(null);
+  };
+
+  /* --- cálculo --------------------------------------------------- */
+  const r = useMemo(() => {
+    const en = conf.energia[postoOk];
+    const sc = conf.scee[postoOk];
+    const fatorIcms = 1 / (1 - Math.min(0.99, Math.max(0, num(icms) / 100)));
+
+    // Tarifa cheia da energia (R$/kWh) = TUSD + TE, opcionalmente com ICMS
+    const tarifaCheiaBase = rkwh(en.tusd + en.te);
+    const tarifaCheia = tarifaCheiaBase * fatorIcms;
+
+    // Tarifa da energia injetada conforme resolução (SCEE)
+    const tarifaSceeBase = rkwh(sc.tusd + sc.te);
+    const tarifaScee = tarifaSceeBase * fatorIcms;
+
+    // Fio B (parcela TUSD Distribuição) usada na valoração da injeção
+    const fioB = rkwh(en.tusd) * fatorIcms;
+    const pct = TRANSICAO_FIO_B[ano] ?? 0.6;
+
+    // Demanda (Grupo A)
+    const demTarifa =
+      grupo === "A"
+        ? conf.demanda[postoOk] ?? conf.demanda.NA ?? Object.values(conf.demanda)[0]
+        : 0;
+    const demKw = num(demanda);
+    const custoDemanda = demTarifa * demKw;
+
+    // Valores editáveis (usuário pode sobrescrever)
+    const tarifaNormal = tarifaNormalManual != null ? num(tarifaNormalManual) : tarifaCheia;
+    const tarifaSolar = tarifaSolarManual != null ? num(tarifaSolarManual) : tarifaCheia;
+
+    const kConsumo = num(consumo);
+    const kGeracao = num(geracao);
+    const kInjecao = Math.min(num(injecao), kGeracao);
+    const autoconsumo = Math.max(0, kGeracao - kInjecao); // energia solar usada na hora
+
+    // Sem solar: paga toda a energia consumida pela tarifa cheia + demanda
+    const contaSemSolar = kConsumo * tarifaNormal + custoDemanda;
+
+    // Energia solar autoconsumida — economiza 100% da tarifa cheia
+    const economiaAutoconsumo = autoconsumo * tarifaSolar;
+
+    // Valoração da energia injetada (Lei 14.300)
+    const creditoBruto = kInjecao * tarifaSolar; // crédito pela energia injetada
+    const custoFioB = kInjecao * fioB * pct; // parcela do fio paga sobre a injeção
+    const creditoLiquido = creditoBruto - custoFioB;
+
+    const economiaTotal = economiaAutoconsumo + creditoLiquido;
+    const contaComSolar = Math.max(custoDemanda, contaSemSolar - economiaTotal);
+
+    return {
+      tarifaCheia,
+      tarifaScee,
+      tarifaSolar,
+      tarifaNormal,
+      fioB,
+      pct,
+      demTarifa,
+      custoDemanda,
+      kConsumo,
+      kGeracao,
+      kInjecao,
+      autoconsumo,
+      contaSemSolar,
+      economiaAutoconsumo,
+      creditoBruto,
+      custoFioB,
+      creditoLiquido,
+      economiaTotal,
+      contaComSolar,
+    };
+  }, [
+    conf,
+    postoOk,
+    grupo,
+    demanda,
+    consumo,
+    geracao,
+    injecao,
+    ano,
+    icms,
+    tarifaNormalManual,
+    tarifaSolarManual,
+  ]);
+
+  const isA = grupo === "A";
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-white via-royal-50/40 to-white font-sans text-royal-950">
+      {/* Cabeçalho */}
+      <header className="border-b border-royal-100 bg-white/80 backdrop-blur">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4 sm:px-6">
+          <a href="./" className="flex items-center gap-2">
+            <img src="./logo-sousa-costa.png" alt="Sousa Costa Energia" className="h-9 w-auto" />
+          </a>
+          <a
+            href="./"
+            className="inline-flex items-center gap-1.5 rounded-full border border-royal-200 px-4 py-2 text-sm font-semibold text-royal-700 transition hover:bg-royal-50"
+          >
+            <ArrowLeft className="h-4 w-4" /> Voltar ao site
+          </a>
+        </div>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
+        {/* Título */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <span className="inline-flex items-center gap-2 rounded-full bg-brand-500/15 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-brand-700">
+            <Calculator className="h-3.5 w-3.5" /> Simulador tarifário
+          </span>
+          <h1 className="mt-4 font-display text-3xl font-extrabold leading-tight text-royal-950 sm:text-4xl">
+            Calculadora de tarifas e valoração de energia
+          </h1>
+          <p className="mt-3 max-w-3xl text-royal-600">
+            Escolha o grupo e subgrupo tarifário, informe demanda, consumo e geração e veja o valor
+            da energia normal, da energia solar e da <strong>energia injetada</strong> conforme a
+            valoração da Lei nº 14.300/2022.
+          </p>
+          <p className="mt-2 text-xs text-royal-400">
+            Base tarifária: {META.resolucao} · {META.distribuidora} · vigência {META.vigencia}.
+          </p>
+        </motion.div>
+
+        <div className="mt-10 grid gap-6 lg:grid-cols-5">
+          {/* ---------------- Entradas ---------------- */}
+          <div className="space-y-6 lg:col-span-3">
+            {/* Configuração tarifária */}
+            <Card>
+              <CardTitle icon={Gauge}>Configuração tarifária</CardTitle>
+
+              <Field label="Grupo tarifário">
+                <div className="grid grid-cols-2 gap-2">
+                  {["A", "B"].map((g) => (
+                    <button
+                      key={g}
+                      onClick={() => onGrupo(g)}
+                      className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 text-left text-sm font-semibold transition ${
+                        grupo === g
+                          ? "border-brand-500 bg-brand-500/10 text-royal-900"
+                          : "border-royal-200 text-royal-600 hover:border-royal-300"
+                      }`}
+                    >
+                      {g === "A" ? (
+                        <Building2 className="h-4 w-4 shrink-0" />
+                      ) : (
+                        <Home className="h-4 w-4 shrink-0" />
+                      )}
+                      {TARIFAS[g].label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Subgrupo">
+                  <Select value={subOk} onChange={(e) => onSub(e.target.value)}>
+                    {subKeys.map((k) => (
+                      <option key={k} value={k}>
+                        {subgrupos[k].label}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <Field label="Modalidade">
+                  <Select value={modOk} onChange={(e) => onMod(e.target.value)}>
+                    {modKeys.map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <Field label="Posto tarifário">
+                  <Select value={postoOk} onChange={(e) => onPosto(e.target.value)}>
+                    {postoKeys.map((k) => (
+                      <option key={k} value={k}>
+                        {POSTO_LABEL[k] || k}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                <Field label="Ano (transição Lei 14.300)">
+                  <Select value={ano} onChange={(e) => setAno(Number(e.target.value))}>
+                    {Object.keys(TRANSICAO_FIO_B).map((a) => (
+                      <option key={a} value={a}>
+                        {a} — Fio B {Math.round(TRANSICAO_FIO_B[a] * 100)}%
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+            </Card>
+
+            {/* Demanda / consumo / geração */}
+            <Card>
+              <CardTitle icon={Zap}>Demanda, consumo e geração</CardTitle>
+
+              {isA && (
+                <Field
+                  label="Demanda contratada (kW)"
+                  hint={`Tarifa de demanda: ${brl(r.demTarifa)}/kW`}
+                >
+                  <Input
+                    value={demanda}
+                    onChange={(e) => setDemanda(e.target.value)}
+                    placeholder="Ex.: 150"
+                    unit="kW"
+                  />
+                </Field>
+              )}
+
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Consumo da rede (kWh)">
+                  <Input
+                    value={consumo}
+                    onChange={(e) => setConsumo(e.target.value)}
+                    unit="kWh"
+                  />
+                </Field>
+                <Field label="Geração solar (kWh)">
+                  <Input
+                    value={geracao}
+                    onChange={(e) => setGeracao(e.target.value)}
+                    unit="kWh"
+                  />
+                </Field>
+                <Field label="Energia injetada (kWh)" hint="Excedente enviado à rede">
+                  <Input
+                    value={injecao}
+                    onChange={(e) => setInjecao(e.target.value)}
+                    unit="kWh"
+                  />
+                </Field>
+              </div>
+              <p className="mt-1 text-xs text-royal-400">
+                Autoconsumo instantâneo = geração − injeção ={" "}
+                <strong>{r.autoconsumo.toLocaleString("pt-BR")} kWh</strong>.
+              </p>
+            </Card>
+
+            {/* Tarifas */}
+            <Card>
+              <CardTitle icon={ArrowLeftRight}>Valor da energia (R$/kWh)</CardTitle>
+              <p className="-mt-2 mb-3 text-xs text-royal-400">
+                Preenchido automaticamente pela tabela da resolução — ajuste se quiser usar valores
+                da sua fatura.
+              </p>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Energia normal (tarifa cheia)">
+                  <Input
+                    value={tarifaNormalManual != null ? tarifaNormalManual : r.tarifaCheia.toFixed(5)}
+                    onChange={(e) => setTarifaNormalManual(e.target.value)}
+                    unit="R$/kWh"
+                  />
+                </Field>
+                <Field label="Energia solar (crédito)">
+                  <Input
+                    value={tarifaSolarManual != null ? tarifaSolarManual : r.tarifaCheia.toFixed(5)}
+                    onChange={(e) => setTarifaSolarManual(e.target.value)}
+                    unit="R$/kWh"
+                  />
+                </Field>
+                <Field label="ICMS sobre a tarifa (%)" hint="Opcional — 0 usa tarifa sem tributos">
+                  <Input value={icms} onChange={(e) => setIcms(e.target.value)} unit="%" />
+                </Field>
+                <div className="flex items-end">
+                  <button
+                    onClick={() => {
+                      setTarifaNormalManual(null);
+                      setTarifaSolarManual(null);
+                      setIcms("0");
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-royal-200 px-3 py-2.5 text-sm font-semibold text-royal-600 transition hover:bg-royal-50"
+                  >
+                    <RotateCcw className="h-4 w-4" /> Restaurar tarifas oficiais
+                  </button>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          {/* ---------------- Resultados ---------------- */}
+          <div className="lg:col-span-2">
+            <div className="lg:sticky lg:top-6 space-y-4">
+              {/* Destaque valoração da injeção */}
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-2xl bg-gradient-to-br from-royal-700 to-royal-900 p-6 text-white shadow-card"
+              >
+                <div className="flex items-center gap-2 text-brand-300">
+                  <Sun className="h-5 w-5" />
+                  <span className="text-xs font-bold uppercase tracking-widest">
+                    Valoração da energia injetada
+                  </span>
+                </div>
+                <p className="mt-4 font-display text-3xl font-extrabold">
+                  {brl(r.creditoLiquido)}
+                </p>
+                <p className="text-sm text-royal-200">crédito líquido pela energia injetada</p>
+
+                <dl className="mt-5 space-y-2 border-t border-white/15 pt-4 text-sm">
+                  <Row label="Crédito bruto da injeção" value={brl(r.creditoBruto)} light />
+                  <Row
+                    label={`Fio B pago (${Math.round(r.pct * 100)}% · Lei 14.300)`}
+                    value={`− ${brl(r.custoFioB)}`}
+                    light
+                  />
+                  <Row
+                    label="Tarifa energia injetada (SCEE)"
+                    value={`${brl4(r.tarifaScee)}/kWh`}
+                    light
+                    muted
+                  />
+                </dl>
+              </motion.div>
+
+              {/* Balanço */}
+              <div className="rounded-2xl border border-royal-100 bg-white p-6 shadow-card">
+                <p className="text-xs font-bold uppercase tracking-widest text-royal-400">
+                  Balanço estimado
+                </p>
+
+                <dl className="mt-4 space-y-3 text-sm">
+                  <Row label="Energia normal (sem solar)" value={brl(r.contaSemSolar)} />
+                  {isA && (
+                    <Row label="Custo da demanda contratada" value={brl(r.custoDemanda)} />
+                  )}
+                  <Row
+                    label="Economia com autoconsumo"
+                    value={`− ${brl(r.economiaAutoconsumo)}`}
+                    accent
+                  />
+                  <Row
+                    label="Crédito líquido da injeção"
+                    value={`− ${brl(r.creditoLiquido)}`}
+                    accent
+                  />
+                  <div className="my-2 border-t border-royal-100" />
+                  <Row
+                    label="Economia total estimada"
+                    value={brl(r.economiaTotal)}
+                    big
+                    accent
+                  />
+                  <Row label="Conta estimada com solar" value={brl(r.contaComSolar)} big />
+                </dl>
+
+                <div className="mt-5 flex items-center gap-2 rounded-xl bg-brand-500/10 px-3 py-2.5 text-xs text-royal-600">
+                  <Leaf className="h-4 w-4 shrink-0 text-brand-600" />
+                  Tarifa cheia da energia: <strong>{brl4(r.tarifaCheia)}/kWh</strong>
+                </div>
+              </div>
+
+              <a
+                href="./#contato"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 py-3.5 font-bold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400"
+              >
+                Falar com um especialista
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Nota / disclaimer */}
+        <div className="mt-10 flex gap-3 rounded-2xl border border-royal-100 bg-royal-50/50 p-5 text-xs leading-relaxed text-royal-500">
+          <Info className="h-5 w-5 shrink-0 text-royal-400" />
+          <p>
+            Simulação com base nas Tabelas 1 e 2 da {META.resolucao} ({META.distribuidora}). Valores
+            de TUSD e TE em base tarifária, sem bandeiras e — por padrão — sem tributos (PIS/COFINS e
+            ICMS). A valoração da energia injetada segue a regra de transição da Lei nº 14.300/2022
+            (Fio B): 2023 = 15% … 2029 = 100%. Os resultados são estimativas para orientação
+            comercial e não substituem a fatura oficial da distribuidora.
+          </p>
+        </div>
+      </main>
+
+      <footer className="border-t border-royal-100 py-8 text-center text-xs text-royal-400">
+        © {new Date().getFullYear()} Sousa Costa Energia · Calculadora tarifária baseada em dados
+        públicos da ANEEL.
+      </footer>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Subcomponentes de UI                                              */
+/* ------------------------------------------------------------------ */
+function Card({ children }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="rounded-2xl border border-royal-100 bg-white p-6 shadow-card"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function CardTitle({ icon: Icon, children }) {
+  return (
+    <h2 className="mb-4 flex items-center gap-2 font-display text-lg font-bold text-royal-900">
+      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-royal-100 text-royal-700">
+        <Icon className="h-4 w-4" />
+      </span>
+      {children}
+    </h2>
+  );
+}
+
+function Field({ label, hint, children }) {
+  return (
+    <label className="mb-4 block">
+      <span className="mb-1.5 block text-sm font-semibold text-royal-700">{label}</span>
+      {children}
+      {hint && <span className="mt-1 block text-xs text-royal-400">{hint}</span>}
+    </label>
+  );
+}
+
+function Select({ children, ...props }) {
+  return (
+    <select
+      {...props}
+      className="w-full rounded-xl border border-royal-200 bg-white px-3 py-2.5 text-sm font-medium text-royal-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+    >
+      {children}
+    </select>
+  );
+}
+
+function Input({ unit, ...props }) {
+  return (
+    <div className="relative">
+      <input
+        inputMode="decimal"
+        {...props}
+        className="w-full rounded-xl border border-royal-200 bg-white px-3 py-2.5 pr-16 text-sm font-medium text-royal-900 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
+      />
+      {unit && (
+        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-royal-400">
+          {unit}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function Row({ label, value, big, accent, light, muted }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt
+        className={`${light ? "text-royal-200" : "text-royal-500"} ${
+          muted ? "opacity-70" : ""
+        } text-sm`}
+      >
+        {label}
+      </dt>
+      <dd
+        className={`text-right font-semibold tabular-nums ${
+          big ? "font-display text-lg" : "text-sm"
+        } ${
+          accent
+            ? "text-brand-600"
+            : light
+            ? "text-white"
+            : "text-royal-900"
+        }`}
+      >
+        {value}
+      </dd>
+    </div>
+  );
+}

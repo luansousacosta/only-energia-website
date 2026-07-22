@@ -41,6 +41,7 @@ import {
   Power,
   ZoomIn,
   Play,
+  Calculator,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -309,6 +310,13 @@ function Header() {
               </a>
             );
           })}
+          <a
+            href="./calculadora.html"
+            className="relative ml-1 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold text-royal-900/70 transition-colors hover:text-royal-700"
+          >
+            <Calculator className="h-4 w-4" />
+            Calculadora
+          </a>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -350,6 +358,12 @@ function Header() {
                   {n.label}
                 </a>
               ))}
+              <a
+                href="./calculadora.html"
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-3 text-base font-semibold text-royal-900 hover:bg-brand-50"
+              >
+                <Calculator className="h-4 w-4" /> Calculadora tarifária
+              </a>
               <a
                 href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
                 target="_blank"
@@ -1929,6 +1943,11 @@ function Footer() {
                   </a>
                 </li>
               ))}
+              <li>
+                <a href="./calculadora.html" className="transition hover:text-white">
+                  Calculadora tarifária
+                </a>
+              </li>
             </ul>
           </div>
 
