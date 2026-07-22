@@ -196,6 +196,23 @@ const POSTO_LABEL = {
   NA: "Único (sem posto)",
 };
 
+// Custo de disponibilidade (Grupo B) — consumo mínimo faturável por tipo de ligação
+// (art. 98 da REN nº 1.000/2021).
+const LIGACOES = {
+  MONO: { label: "Monofásico (30 kWh)", kwh: 30 },
+  BI: { label: "Bifásico (50 kWh)", kwh: 50 },
+  TRI: { label: "Trifásico (100 kWh)", kwh: 100 },
+};
+
+// Bandeiras tarifárias — adicional sobre a energia consumida (R$/MWh).
+// Valores fixados pela ANEEL em ato específico; ajuste se houver atualização.
+const BANDEIRAS = {
+  VERDE: { label: "Verde (sem adicional)", mwh: 0 },
+  AMARELA: { label: "Amarela (+ R$ 18,85/MWh)", mwh: 18.85 },
+  VERMELHA1: { label: "Vermelha P1 (+ R$ 44,63/MWh)", mwh: 44.63 },
+  VERMELHA2: { label: "Vermelha P2 (+ R$ 78,77/MWh)", mwh: 78.77 },
+};
+
 /* ------------------------------------------------------------------ */
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
@@ -233,6 +250,8 @@ export default function Calculadora() {
   const [consumo, setConsumo] = useState("1000");
   const [geracao, setGeracao] = useState("1000");
   const [injecao, setInjecao] = useState("400");
+  const [ligacao, setLigacao] = useState("TRI");
+  const [bandeira, setBandeira] = useState("VERDE");
 
   // tarifas editáveis (R$/kWh) — preenchidas automaticamente, mas ajustáveis
   const [tarifaNormalManual, setTarifaNormalManual] = useState(null);
@@ -290,13 +309,15 @@ export default function Calculadora() {
     const aliqTotal = Math.min(0.99, Math.max(0, (num(icms) + num(pisCofins)) / 100));
     const fatorTrib = 1 / (1 - aliqTotal);
 
-    // Tarifa cheia da energia (R$/kWh) = (TUSD + TE) já com tributos
-    const tarifaCheiaBase = rkwh(en.tusd + en.te);
-    const tarifaCheia = tarifaCheiaBase * fatorTrib;
+    // Bandeira tarifária — adicional sobre a energia (R$/MWh)
+    const bandeiraMwh = BANDEIRAS[bandeira]?.mwh ?? 0;
+
+    // Tarifa cheia da energia (R$/kWh) = (TUSD + TE + bandeira) já com tributos
+    const tarifaSemImposto = rkwh(en.tusd + en.te);
+    const tarifaCheia = rkwh(en.tusd + en.te + bandeiraMwh) * fatorTrib;
 
     // Tarifa da energia injetada conforme resolução (SCEE)
-    const tarifaSceeBase = rkwh(sc.tusd + sc.te);
-    const tarifaScee = tarifaSceeBase * fatorTrib;
+    const tarifaScee = rkwh(sc.tusd + sc.te) * fatorTrib;
 
     // Fio B (parcela TUSD Distribuição) usada na valoração da injeção —
     // valor exato da aba "TA - Aplicação" (coluna TUSD_FioB).
@@ -331,16 +352,30 @@ export default function Calculadora() {
     const custoFioB = kInjecao * fioB * pct; // parcela do fio paga sobre a injeção
     const creditoLiquido = creditoBruto - custoFioB;
 
-    const economiaTotal = economiaAutoconsumo + creditoLiquido;
-    const contaComSolar = Math.max(custoDemanda, contaSemSolar - economiaTotal);
+    // Custo de disponibilidade (Grupo B) — consumo mínimo pela tarifa cheia
+    const minKwh = grupo === "B" ? LIGACOES[ligacao]?.kwh ?? 0 : 0;
+    const custoDisponibilidade = minKwh * tarifaCheia;
+
+    // PISO da fatura: Grupo A paga a demanda; Grupo B paga o MAIOR entre o
+    // custo de disponibilidade e o Fio B da energia injetada (regra Lei 14.300).
+    const piso =
+      grupo === "A" ? custoDemanda : Math.max(custoDisponibilidade, custoFioB);
+    const pisoFioBMaior = grupo === "B" && custoFioB >= custoDisponibilidade;
+
+    // Balanço: abate a energia compensada e aplica o piso
+    const economiaCompensacao = economiaAutoconsumo + creditoBruto;
+    const contaLiquida = contaSemSolar - economiaCompensacao;
+    const contaComSolar = Math.max(contaLiquida, piso);
+    const economiaTotal = contaSemSolar - contaComSolar;
 
     return {
       tarifaCheia,
-      tarifaCheiaBase,
+      tarifaSemImposto,
       tarifaScee,
       tarifaSolar,
       tarifaNormal,
       aliqTotal,
+      bandeiraMwh,
       fioB,
       pct,
       demTarifa,
@@ -354,6 +389,10 @@ export default function Calculadora() {
       creditoBruto,
       custoFioB,
       creditoLiquido,
+      minKwh,
+      custoDisponibilidade,
+      piso,
+      pisoFioBMaior,
       economiaTotal,
       contaComSolar,
     };
@@ -368,6 +407,8 @@ export default function Calculadora() {
     ano,
     icms,
     pisCofins,
+    ligacao,
+    bandeira,
     tarifaNormalManual,
     tarifaSolarManual,
   ]);
@@ -484,6 +525,28 @@ export default function Calculadora() {
                     ))}
                   </Select>
                 </Field>
+
+                <Field label="Bandeira tarifária">
+                  <Select value={bandeira} onChange={(e) => setBandeira(e.target.value)}>
+                    {Object.keys(BANDEIRAS).map((k) => (
+                      <option key={k} value={k}>
+                        {BANDEIRAS[k].label}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+
+                {grupo === "B" && (
+                  <Field label="Tipo de ligação (disponibilidade)">
+                    <Select value={ligacao} onChange={(e) => setLigacao(e.target.value)}>
+                      {Object.keys(LIGACOES).map((k) => (
+                        <option key={k} value={k}>
+                          {LIGACOES[k].label}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                )}
               </div>
             </Card>
 
@@ -567,7 +630,7 @@ export default function Calculadora() {
               <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
                 <p className="text-xs text-royal-400">
                   Tributos totais: <strong>{(r.aliqTotal * 100).toFixed(0)}%</strong> · tarifa sem
-                  impostos: {brl4(r.tarifaCheiaBase)}/kWh
+                  impostos: {brl4(r.tarifaSemImposto)}/kWh
                 </p>
                 <button
                   onClick={() => {
@@ -628,6 +691,13 @@ export default function Calculadora() {
 
                 <dl className="mt-4 space-y-3 text-sm">
                   <Row label="Energia normal (sem solar)" value={brl(r.contaSemSolar)} />
+                  {r.bandeiraMwh > 0 && (
+                    <Row
+                      label={`Bandeira ${BANDEIRAS[bandeira].label.split(" ")[0].toLowerCase()} (inclusa)`}
+                      value={`${brl4(rkwh(r.bandeiraMwh) / (1 - r.aliqTotal))}/kWh`}
+                      muted
+                    />
+                  )}
                   {isA && (
                     <Row label="Custo da demanda contratada" value={brl(r.custoDemanda)} />
                   )}
@@ -637,10 +707,33 @@ export default function Calculadora() {
                     accent
                   />
                   <Row
-                    label="Crédito líquido da injeção"
-                    value={`− ${brl(r.creditoLiquido)}`}
+                    label="Economia com energia injetada"
+                    value={`− ${brl(r.creditoBruto)}`}
                     accent
                   />
+                  <div className="my-2 border-t border-royal-100" />
+
+                  {/* Piso da fatura */}
+                  {isA ? (
+                    <Row label="Cobrança mínima — demanda" value={brl(r.custoDemanda)} />
+                  ) : (
+                    <div className="rounded-xl bg-royal-50 px-3 py-3">
+                      <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-royal-400">
+                        Cobrança mínima — maior entre:
+                      </p>
+                      <Row
+                        label={`Custo de disponibilidade (${r.minKwh} kWh)`}
+                        value={brl(r.custoDisponibilidade)}
+                        highlight={!r.pisoFioBMaior}
+                      />
+                      <Row
+                        label={`Fio B da injeção (${Math.round(r.pct * 100)}%)`}
+                        value={brl(r.custoFioB)}
+                        highlight={r.pisoFioBMaior}
+                      />
+                    </div>
+                  )}
+
                   <div className="my-2 border-t border-royal-100" />
                   <Row
                     label="Economia total estimada"
@@ -673,9 +766,11 @@ export default function Calculadora() {
           <p>
             Simulação com base nas Tabelas 1 e 2 da {META.resolucao} ({META.distribuidora}). Tarifas
             de TUSD e TE com tributos aplicados por dentro (ICMS 20% e PIS/COFINS 5% no padrão do RN,
-            ajustáveis) e sem bandeiras tarifárias. A valoração da energia injetada segue a regra de
-            transição da Lei nº 14.300/2022 (Fio B): 2023 = 15% … 2029 = 100%. Os resultados são
-            estimativas para orientação comercial e não substituem a fatura oficial da distribuidora.
+            ajustáveis) e bandeira tarifária selecionável. A valoração da energia injetada segue a
+            regra de transição da Lei nº 14.300/2022 (Fio B): 2023 = 15% … 2029 = 100%. Para o Grupo
+            B, a cobrança mínima é o maior valor entre o custo de disponibilidade (30/50/100 kWh) e o
+            Fio B da energia injetada. Os resultados são estimativas para orientação comercial e não
+            substituem a fatura oficial da distribuidora.
           </p>
         </div>
       </main>
@@ -753,21 +848,28 @@ function Input({ unit, ...props }) {
   );
 }
 
-function Row({ label, value, big, accent, light, muted }) {
+function Row({ label, value, big, accent, light, muted, highlight }) {
   return (
-    <div className="flex items-baseline justify-between gap-3">
+    <div
+      className={`flex items-baseline justify-between gap-3 ${
+        highlight ? "rounded-lg bg-brand-500/15 px-2 py-1 -mx-2" : ""
+      }`}
+    >
       <dt
         className={`${light ? "text-royal-200" : "text-royal-500"} ${
           muted ? "opacity-70" : ""
-        } text-sm`}
+        } ${highlight ? "font-semibold text-royal-800" : ""} text-sm`}
       >
         {label}
+        {highlight && <span className="ml-1 text-brand-700">◄ aplicado</span>}
       </dt>
       <dd
         className={`text-right font-semibold tabular-nums ${
           big ? "font-display text-lg" : "text-sm"
         } ${
-          accent
+          highlight
+            ? "text-brand-700"
+            : accent
             ? "text-brand-600"
             : light
             ? "text-white"
