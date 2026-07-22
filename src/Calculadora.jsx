@@ -33,7 +33,10 @@ const META = {
   vigencia: "22/04/2026 a 21/04/2027",
 };
 
-// energia: { tusd, te } em R$/MWh · demanda em R$/kW · scee: tarifa da energia injetada (R$/MWh)
+// energia: { tusd, te, fioB } em R$/MWh · demanda em R$/kW (Grupo A)
+// scee: tarifa da energia injetada (R$/MWh) · fioB = parcela TUSD Distribuição
+// usada na valoração da energia injetada (Lei 14.300).
+// Valores da aba "TA - Aplicação" — PCAT Neoenergia Cosern 2026 (RTA 2026).
 const TARIFAS = {
   A: {
     label: "Grupo A — média/alta tensão (com demanda)",
@@ -43,7 +46,11 @@ const TARIFAS = {
         modalidades: {
           AZUL: {
             demanda: { P: 26.36, FP: 12.08 },
-            energia: { P: { tusd: 67.53, te: 494.6 }, FP: { tusd: 67.53, te: 291.65 } },
+            demandaFioB: { P: 13.3878, FP: 1.3388 },
+            energia: {
+              P: { tusd: 67.53, te: 494.6, fioB: 0 },
+              FP: { tusd: 67.53, te: 291.65, fioB: 0 },
+            },
             scee: { P: { tusd: 67.53, te: 9.76 }, FP: { tusd: 67.53, te: 9.76 } },
           },
         },
@@ -53,7 +60,11 @@ const TARIFAS = {
         modalidades: {
           AZUL: {
             demanda: { P: 29.23, FP: 15.05 },
-            energia: { P: { tusd: 68.14, te: 494.6 }, FP: { tusd: 68.14, te: 291.65 } },
+            demandaFioB: { P: 14.4421, FP: 3.7088 },
+            energia: {
+              P: { tusd: 68.14, te: 494.6, fioB: 0 },
+              FP: { tusd: 68.14, te: 291.65, fioB: 0 },
+            },
             scee: { P: { tusd: 68.14, te: 9.76 }, FP: { tusd: 68.14, te: 9.76 } },
           },
         },
@@ -63,12 +74,20 @@ const TARIFAS = {
         modalidades: {
           AZUL: {
             demanda: { P: 77.92, FP: 32.0 },
-            energia: { P: { tusd: 117.19, te: 485.53 }, FP: { tusd: 117.19, te: 282.57 } },
+            demandaFioB: { P: 63.9545, FP: 20.263 },
+            energia: {
+              P: { tusd: 117.19, te: 485.53, fioB: 0 },
+              FP: { tusd: 117.19, te: 282.57, fioB: 0 },
+            },
             scee: { P: { tusd: 117.19, te: 0.69 }, FP: { tusd: 117.19, te: 0.69 } },
           },
           VERDE: {
             demanda: { NA: 32.0 },
-            energia: { P: { tusd: 2009.69, te: 485.53 }, FP: { tusd: 117.19, te: 282.57 } },
+            demandaFioB: { NA: 20.263 },
+            energia: {
+              P: { tusd: 2009.69, te: 485.53, fioB: 1538.1083 },
+              FP: { tusd: 117.19, te: 282.57, fioB: 0 },
+            },
             scee: { P: { tusd: 2009.69, te: 0.69 }, FP: { tusd: 117.19, te: 0.69 } },
           },
         },
@@ -82,14 +101,14 @@ const TARIFAS = {
         label: "B1 · Residencial",
         modalidades: {
           CONVENCIONAL: {
-            energia: { NA: { tusd: 482.36, te: 293.44 } },
+            energia: { NA: { tusd: 482.36, te: 293.44, fioB: 266.9958 } },
             scee: { NA: { tusd: 482.36, te: -5.36 } },
           },
           BRANCA: {
             energia: {
-              P: { tusd: 1190.91, te: 479.48 },
-              INT: { tusd: 781.52, te: 276.53 },
-              FP: { tusd: 372.14, te: 276.53 },
+              P: { tusd: 1190.91, te: 479.48, fioB: 867.7363 },
+              INT: { tusd: 781.52, te: 276.53, fioB: 520.6418 },
+              FP: { tusd: 372.14, te: 276.53, fioB: 173.5472 },
             },
             scee: {
               P: { tusd: 1190.91, te: -5.36 },
@@ -103,14 +122,14 @@ const TARIFAS = {
         label: "B2 · Rural",
         modalidades: {
           CONVENCIONAL: {
-            energia: { NA: { tusd: 482.36, te: 293.44 } },
+            energia: { NA: { tusd: 482.36, te: 293.44, fioB: 266.9958 } },
             scee: { NA: { tusd: 482.36, te: -5.36 } },
           },
           BRANCA: {
             energia: {
-              P: { tusd: 1206.65, te: 479.48 },
-              INT: { tusd: 790.97, te: 276.53 },
-              FP: { tusd: 375.29, te: 276.53 },
+              P: { tusd: 1206.65, te: 479.48, fioB: 881.086 },
+              INT: { tusd: 790.97, te: 276.53, fioB: 528.6516 },
+              FP: { tusd: 375.29, te: 276.53, fioB: 176.2172 },
             },
             scee: {
               P: { tusd: 1206.65, te: -5.36 },
@@ -124,14 +143,14 @@ const TARIFAS = {
         label: "B3 · Comercial / Industrial / Demais",
         modalidades: {
           CONVENCIONAL: {
-            energia: { NA: { tusd: 482.36, te: 293.44 } },
+            energia: { NA: { tusd: 482.36, te: 293.44, fioB: 266.9958 } },
             scee: { NA: { tusd: 482.36, te: -5.36 } },
           },
           BRANCA: {
             energia: {
-              P: { tusd: 1175.16, te: 479.48 },
-              INT: { tusd: 772.08, te: 276.53 },
-              FP: { tusd: 368.99, te: 276.53 },
+              P: { tusd: 1175.16, te: 479.48, fioB: 854.3865 },
+              INT: { tusd: 772.08, te: 276.53, fioB: 512.6319 },
+              FP: { tusd: 368.99, te: 276.53, fioB: 170.8773 },
             },
             scee: {
               P: { tusd: 1175.16, te: -5.36 },
@@ -145,11 +164,11 @@ const TARIFAS = {
         label: "B4 · Iluminação Pública",
         modalidades: {
           "B4a — Rede de distribuição": {
-            energia: { NA: { tusd: 265.3, te: 161.39 } },
+            energia: { NA: { tusd: 265.3, te: 161.39, fioB: 146.8477 } },
             scee: { NA: { tusd: 265.3, te: -5.36 } },
           },
           "B4b — Bulbo de lâmpada": {
-            energia: { NA: { tusd: 289.42, te: 176.06 } },
+            energia: { NA: { tusd: 289.42, te: 176.06, fioB: 160.1975 } },
             scee: { NA: { tusd: 289.42, te: -5.36 } },
           },
         },
@@ -275,8 +294,9 @@ export default function Calculadora() {
     const tarifaSceeBase = rkwh(sc.tusd + sc.te);
     const tarifaScee = tarifaSceeBase * fatorIcms;
 
-    // Fio B (parcela TUSD Distribuição) usada na valoração da injeção
-    const fioB = rkwh(en.tusd) * fatorIcms;
+    // Fio B (parcela TUSD Distribuição) usada na valoração da injeção —
+    // valor exato da aba "TA - Aplicação" (coluna TUSD_FioB).
+    const fioB = rkwh(en.fioB ?? 0) * fatorIcms;
     const pct = TRANSICAO_FIO_B[ano] ?? 0.6;
 
     // Demanda (Grupo A)
