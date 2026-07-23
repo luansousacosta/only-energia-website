@@ -453,14 +453,14 @@ function Hero() {
             className="mt-8 flex flex-wrap items-center gap-3"
           >
             <a
-              href="#simulador"
-              onClick={(e) => {
-                e.preventDefault();
-                document.getElementById("simulador")?.scrollIntoView({ behavior: "smooth" });
-              }}
+              href={CONTATO.calculadora}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => registrarConversao("calculadora")}
               className="group inline-flex items-center gap-2 rounded-full bg-brand-500 px-7 py-3.5 font-semibold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400"
             >
-              Simular minha economia
+              <Calculator className="h-4 w-4" />
+              Orçamento rápido
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a
