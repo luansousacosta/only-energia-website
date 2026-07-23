@@ -87,9 +87,11 @@ const CONVERSOES = {
   // { adsSendTo: "AW-<id>/<rótulo>", ga4: "<nome do evento GA4>" }
   formulario: { adsSendTo: "AW-658673813/gC70CLS76c0cEJWhiroC", ga4: "generate_lead" },
   whatsapp: { adsSendTo: "AW-658673813/m5MKCLe76c0cEJWhiroC", ga4: "click_whatsapp" },
-  // Clique em "Proposta rápida" (calculadora). Sem rótulo do Google Ads por
+  // Clique em "Orçamento rápido" (calculadora). Sem rótulo do Google Ads por
   // enquanto — só evento GA4; crie uma ação de conversão no Ads e adicione o
   // adsSendTo aqui depois, se quiser contar como conversão paga.
+  // (nome do evento GA4 mantido como 'click_proposta_rapida' para não perder
+  //  o histórico já coletado no Analytics.)
   calculadora: { ga4: "click_proposta_rapida" },
 };
 
@@ -329,7 +331,7 @@ function Header() {
             className="hidden items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400 lg:inline-flex"
           >
             <Calculator className="h-4 w-4" />
-            Proposta rápida
+            Orçamento rápido
           </a>
           <a
             href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
@@ -376,7 +378,7 @@ function Header() {
                 onClick={() => { registrarConversao("calculadora"); setOpen(false); }}
                 className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 font-bold text-royal-950"
               >
-                <Calculator className="h-4 w-4" /> Proposta rápida
+                <Calculator className="h-4 w-4" /> Orçamento rápido
               </a>
               <a
                 href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
