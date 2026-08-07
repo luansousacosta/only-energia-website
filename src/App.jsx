@@ -41,7 +41,6 @@ import {
   Power,
   ZoomIn,
   Play,
-  Calculator,
 } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -54,9 +53,7 @@ const CONTATO = {
   telefoneExibicao: "(84) 99126-0677",
   email: "contato@sousacosta.com.br",
   instagram: "https://www.instagram.com/sousacosta.energia",
-  cidade: "São Gonçalo do Amarante · RN — atendemos todo o RN",
-  // Calculadora de proposta rápida (app independente, no subdomínio).
-  calculadora: "https://calculadora.sousacosta.com.br/",
+  cidade: "São Gonçalo do Amarante · RN — atendemos todo o Brasil",
 };
 
 /*
@@ -87,12 +84,6 @@ const CONVERSOES = {
   // { adsSendTo: "AW-<id>/<rótulo>", ga4: "<nome do evento GA4>" }
   formulario: { adsSendTo: "AW-658673813/gC70CLS76c0cEJWhiroC", ga4: "generate_lead" },
   whatsapp: { adsSendTo: "AW-658673813/m5MKCLe76c0cEJWhiroC", ga4: "click_whatsapp" },
-  // Clique em "Orçamento rápido" (calculadora). Sem rótulo do Google Ads por
-  // enquanto — só evento GA4; crie uma ação de conversão no Ads e adicione o
-  // adsSendTo aqui depois, se quiser contar como conversão paga.
-  // (nome do evento GA4 mantido como 'click_proposta_rapida' para não perder
-  //  o histórico já coletado no Analytics.)
-  calculadora: { ga4: "click_proposta_rapida" },
 };
 
 function registrarConversao(tipo, valor = 50) {
@@ -211,7 +202,7 @@ const SectionHead = ({ eyebrow, title, subtitle, center = true, light = false })
   </div>
 );
 
-/* Número animado — usado no simulador e nos contadores */
+/* Número animado — usado nos contadores e no card do hero */
 function AnimatedNumber({ value, format = (n) => Math.round(n).toLocaleString("pt-BR") }) {
   const mv = useMotionValue(0);
   const spring = useSpring(mv, { stiffness: 80, damping: 18, mass: 0.8 });
@@ -239,8 +230,7 @@ const LogoBadge = ({ className = "h-10 w-10" }) => (
 /* ------------------------------------------------------------------ */
 const NAV = [
   { label: "Início", href: "#inicio" },
-  { label: "Soluções", href: "#solucoes" },
-  { label: "Simulador", href: "#simulador" },
+  { label: "Serviços", href: "#solucoes" },
   { label: "Investimento", href: "#investimento" },
   { label: "Projetos", href: "#projetos" },
   { label: "Galeria", href: "#galeria" },
@@ -324,16 +314,6 @@ function Header() {
 
         <div className="flex items-center gap-3">
           <a
-            href={CONTATO.calculadora}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => registrarConversao("calculadora")}
-            className="hidden items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-bold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400 lg:inline-flex"
-          >
-            <Calculator className="h-4 w-4" />
-            Orçamento rápido
-          </a>
-          <a
             href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
             target="_blank"
             rel="noreferrer"
@@ -372,19 +352,10 @@ function Header() {
                 </a>
               ))}
               <a
-                href={CONTATO.calculadora}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => { registrarConversao("calculadora"); setOpen(false); }}
-                className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-500 px-4 py-3 font-bold text-royal-950"
-              >
-                <Calculator className="h-4 w-4" /> Orçamento rápido
-              </a>
-              <a
                 href={wa("Olá! Quero um orçamento com a Sousa Costa Energia.")}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-royal-600 px-4 py-3 font-semibold text-white"
+                className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-royal-600 px-4 py-3 font-semibold text-white"
               >
                 <MessageCircle className="h-4 w-4" /> Fale conosco
               </a>
@@ -417,7 +388,7 @@ function Hero() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-500 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-brand-500" />
               </span>
-              Energia solar · Rio Grande do Norte
+              Energia solar para empresas · Todo o Brasil
             </span>
           </motion.div>
 
@@ -427,9 +398,9 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.05 }}
             className="mt-6 font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-royal-950 sm:text-5xl lg:text-6xl text-balance"
           >
-            A energia do seu futuro é{" "}
+            Sua usina solar em boas mãos,{" "}
             <span className="relative whitespace-nowrap">
-              <span className="text-gradient bg-gradient-to-r from-brand-600 to-brand-500">limpa e inteligente</span>
+              <span className="text-gradient bg-gradient-to-r from-brand-600 to-brand-500">do projeto à operação</span>
               <svg className="absolute -bottom-2 left-0 w-full" height="10" viewBox="0 0 300 10" preserveAspectRatio="none">
                 <path d="M2 7 C 80 2, 220 2, 298 7" stroke="#9AD52A" strokeWidth="4" fill="none" strokeLinecap="round" />
               </svg>
@@ -442,10 +413,10 @@ function Hero() {
             transition={{ duration: 0.7, delay: 0.15 }}
             className="mt-6 max-w-xl text-lg leading-relaxed text-royal-900/70"
           >
-            A <strong className="text-royal-800">Sousa Costa Energia</strong> é especialista em energia solar no{" "}
-            <strong className="text-royal-800">Rio Grande do Norte</strong>: instalação, sistemas híbridos, BESS, usinas
-            de investimento e manutenção (O&amp;M). Reduza sua conta de luz em até{" "}
-            <strong className="text-royal-800">95%</strong>.
+            A <strong className="text-royal-800">Sousa Costa Energia</strong> atende{" "}
+            <strong className="text-royal-800">empresas, indústrias e proprietários de usinas</strong> em todo o
+            Brasil: EPC de usinas (inclusive grande porte), O&amp;M com planos de manutenção, retrofit,
+            comissionamento, lavagem e termografia.
           </motion.p>
 
           <motion.div
@@ -455,18 +426,18 @@ function Hero() {
             className="mt-8 flex flex-wrap items-center gap-3"
           >
             <a
-              href={CONTATO.calculadora}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => registrarConversao("calculadora")}
+              href="#contato"
+              onClick={(e) => {
+                e.preventDefault();
+                document.getElementById("contato")?.scrollIntoView({ behavior: "smooth" });
+              }}
               className="group inline-flex items-center gap-2 rounded-full bg-brand-500 px-7 py-3.5 font-semibold text-royal-950 shadow-lg shadow-brand-500/30 transition hover:bg-brand-400"
             >
-              <Calculator className="h-4 w-4" />
-              Orçamento rápido
+              Solicitar proposta
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
             <a
-              href={wa("Olá! Quero falar com um especialista da Sousa Costa Energia.")}
+              href={wa("Olá! Quero falar com um especialista da Sousa Costa Energia sobre a minha usina/empresa.")}
               target="_blank"
               rel="noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-royal-200 bg-white/80 px-7 py-3.5 font-semibold text-royal-800 backdrop-blur transition hover:border-royal-300 hover:bg-white"
@@ -484,8 +455,8 @@ function Hero() {
           >
             {[
               { icon: ShieldCheck, t: "Projetos com garantia" },
-              { icon: Leaf, t: "100% energia limpa" },
-              { icon: Star, t: "Clientes satisfeitos" },
+              { icon: MapPin, t: "Atuação em todo o Brasil" },
+              { icon: Wrench, t: "Equipe técnica especializada" },
             ].map((i) => (
               <span key={i.t} className="inline-flex items-center gap-2">
                 <i.icon className="h-4 w-4 text-brand-600" />
@@ -507,7 +478,7 @@ function Hero() {
               <div className="flex items-center gap-2">
                 <LogoBadge className="h-9 w-9" />
                 <div>
-                  <p className="text-xs font-semibold text-royal-900/60">Sua economia estimada</p>
+                  <p className="text-xs font-semibold text-royal-900/60">Gestão de usinas</p>
                   <p className="font-display text-sm font-bold text-royal-900">Painel Sousa Costa</p>
                 </div>
               </div>
@@ -515,20 +486,18 @@ function Hero() {
             </div>
 
             <div className="mt-6 rounded-2xl bg-gradient-to-br from-royal-600 to-royal-800 p-5 text-white">
-              <p className="text-xs font-medium text-royal-100">Economia acumulada · 25 anos</p>
+              <p className="text-xs font-medium text-royal-100">Portfólio em O&amp;M e monitoramento</p>
               <p className="mt-1 font-display text-3xl font-extrabold">
-                <AnimatedNumber value={168000} format={brl} />
+                <AnimatedNumber value={9} /> MWp
               </p>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <div className="rounded-xl bg-white/10 p-3">
-                  <p className="text-royal-100">Economia/mês</p>
-                  <p className="font-bold">
-                    <AnimatedNumber value={560} format={brl} />
-                  </p>
+                  <p className="text-royal-100">Implantados</p>
+                  <p className="font-bold">1,2 MWp</p>
                 </div>
                 <div className="rounded-xl bg-white/10 p-3">
-                  <p className="text-royal-100">Redução</p>
-                  <p className="font-bold text-brand-300">95%</p>
+                  <p className="text-royal-100">Em implantação</p>
+                  <p className="font-bold text-brand-300">2,3 MWp</p>
                 </div>
               </div>
             </div>
@@ -558,8 +527,8 @@ function Hero() {
                 <Sun className="h-5 w-5 text-brand-600" />
               </div>
               <div>
-                <p className="text-[11px] font-medium text-royal-900/60">Geração hoje</p>
-                <p className="text-sm font-bold text-royal-900">42,6 kWh</p>
+                <p className="text-[11px] font-medium text-royal-900/60">Monitoramento</p>
+                <p className="text-sm font-bold text-royal-900">24/7 em tempo real</p>
               </div>
             </div>
           </motion.div>
@@ -574,8 +543,8 @@ function Hero() {
                 <Leaf className="h-5 w-5 text-royal-600" />
               </div>
               <div>
-                <p className="text-[11px] font-medium text-royal-900/60">CO₂ evitado</p>
-                <p className="text-sm font-bold text-royal-900">1,8 ton/ano</p>
+                <p className="text-[11px] font-medium text-royal-900/60">Inspeções técnicas</p>
+                <p className="text-sm font-bold text-royal-900">Termografia e lavagem</p>
               </div>
             </div>
           </motion.div>
@@ -592,9 +561,9 @@ function StatStrip() {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, amount: 0.4 });
   const stats = [
-    { value: 95, suffix: "%", label: "de redução na conta de luz" },
+    { value: 9, suffix: " MWp", label: "em O&M e monitoramento" },
+    { value: 13500, suffix: "+", label: "módulos no maior projeto (retrofit)" },
     { value: 25, suffix: " anos", label: "de vida útil dos sistemas" },
-    { value: 100, suffix: "%", label: "energia limpa e renovável" },
     { value: 48, suffix: "h", label: "para uma proposta sob medida" },
   ];
   return (
@@ -621,36 +590,36 @@ function StatStrip() {
 /* ------------------------------------------------------------------ */
 const SOLUCOES = [
   {
-    icon: Sun,
-    title: "Instalação de energia solar (On-Grid)",
-    text: "Sistemas fotovoltaicos para residências, comércios e indústrias conectadas à rede. A energia gerada abate direto na sua conta de luz.",
+    icon: Factory,
+    title: "EPC — Construção de usinas",
+    text: "Projeto, suprimentos e construção completa de usinas solares, incluindo grande porte (MW): engenharia, execução e entrega em operação.",
+    tag: "Grandes usinas",
+  },
+  {
+    icon: Wrench,
+    title: "O&M e planos de manutenção",
+    text: "Operação e manutenção de usinas: corretiva, preventiva e planos recorrentes com monitoramento 24/7, inspeções e relatórios de desempenho.",
     tag: "Mais procurado",
   },
   {
     icon: Power,
-    title: "Solar Zero Grid",
-    text: "Para o Mercado Livre e unidades com restrição de injeção na rede. Opera sem exportar excedente à distribuidora, com controle de exportação.",
+    title: "Retrofit e repotenciação",
+    text: "Recuperação de usinas gerando abaixo do esperado ou com equipamentos defasados — diagnóstico, modernização e retomada de performance.",
   },
   {
-    icon: BatteryCharging,
-    title: "Sistemas híbridos + baterias",
-    text: "Geração fotovoltaica combinada com baterias: energia armazenada para os horários de pico e continuidade no fornecimento em quedas de rede.",
+    icon: ShieldCheck,
+    title: "Comissionamento de usinas",
+    text: "Testes, inspeção e energização de usinas — inclusive construídas por terceiros — com laudos e conformidade para operação segura.",
+  },
+  {
+    icon: Sparkles,
+    title: "Lavagem e termografia",
+    text: "Limpeza especializada de módulos e inspeção termográfica para identificar perdas, pontos quentes e riscos antes que virem prejuízo.",
   },
   {
     icon: BatteryFull,
-    title: "BESS — Armazenamento de energia",
-    text: "Battery Energy Storage System para indústrias e grandes consumidores: corte de ponta, gestão de demanda e arbitragem de tarifa.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Usina solar de investimento",
-    text: "Invista em cotas de geração e receba renda passiva mensal com um ativo real, sustentável e de baixo risco.",
-    tag: "Renda passiva",
-  },
-  {
-    icon: Wrench,
-    title: "O&M — Operação e manutenção",
-    text: "Manutenção de usinas solares: inspeções preventivas, limpeza especializada, termografia, monitoramento 24/7 e relatórios de desempenho.",
+    title: "Híbrido e BESS — armazenamento",
+    text: "Baterias para indústrias e grandes consumidores: backup de cargas críticas, corte de ponta, gestão de demanda e arbitragem de tarifa.",
   },
 ];
 
@@ -660,8 +629,8 @@ function Solucoes() {
       <Container>
         <SectionHead
           eyebrow="O que fazemos"
-          title="Soluções completas em energia solar"
-          subtitle="Instalação de energia solar, sistemas híbridos, BESS, usinas de investimento e manutenção (O&M) — do projeto à operação, em todo o Rio Grande do Norte."
+          title="Serviços completos para usinas e empresas"
+          subtitle="EPC, O&M, retrofit, comissionamento, lavagem e termografia — da construção à operação de usinas solares, em todo o Brasil."
         />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {SOLUCOES.map((s, i) => (
@@ -698,128 +667,6 @@ function Solucoes() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Simulador de economia                                              */
-/* ------------------------------------------------------------------ */
-function Simulador({ conta, setConta }) {
-  const pct = 0.9; // economia conservadora de 90%
-
-  const dados = useMemo(() => {
-    const mensal = conta * pct;
-    const anual = mensal * 12;
-    const total25 = anual * 25;
-    const kwhAno = (conta / 0.85) * 12; // tarifa média aproximada
-    const arvores = Math.max(1, Math.round((kwhAno * 0.0817) / 22)); // CO2 -> árvores/ano
-    return { mensal, anual, total25, arvores };
-  }, [conta]);
-
-  return (
-    <section id="simulador" className="py-20 sm:py-28">
-      <Container>
-        <div className="overflow-hidden rounded-[2.5rem] border border-royal-100 bg-gradient-to-br from-royal-700 via-royal-700 to-royal-900 shadow-glow">
-          <div className="grid gap-10 p-8 sm:p-12 lg:grid-cols-2 lg:p-16">
-            {/* Controles */}
-            <div>
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-brand-300">
-                <Wallet className="h-3.5 w-3.5" /> Simulador exclusivo
-              </span>
-              <h2 className="mt-4 font-display text-3xl font-extrabold text-white sm:text-4xl">
-                Quanto você pode economizar?
-              </h2>
-              <p className="mt-3 text-royal-100">
-                Arraste e descubra em segundos o impacto da energia solar no seu bolso — sem compromisso.
-              </p>
-
-              <div className="mt-9">
-                <div className="flex items-end justify-between">
-                  <label htmlFor="conta" className="text-sm font-medium text-royal-100">
-                    Sua conta de luz por mês
-                  </label>
-                  <span className="font-display text-2xl font-extrabold text-brand-300">{brl(conta)}</span>
-                </div>
-                <input
-                  id="conta"
-                  type="range"
-                  min={150}
-                  max={10000}
-                  step={50}
-                  value={conta}
-                  onChange={(e) => setConta(Number(e.target.value))}
-                  className="mt-4 h-2 w-full cursor-pointer appearance-none rounded-full bg-white/20 accent-brand-500"
-                />
-                <div className="mt-2 flex justify-between text-xs text-royal-200">
-                  <span>{brl(150)}</span>
-                  <span>{brl(10000)}</span>
-                </div>
-
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {[300, 600, 1200, 3000].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setConta(v)}
-                      className={`rounded-full px-4 py-1.5 text-sm font-semibold transition ${
-                        conta === v ? "bg-brand-500 text-royal-950" : "bg-white/10 text-white hover:bg-white/20"
-                      }`}
-                    >
-                      {brl(v)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Resultados */}
-            <div className="grid content-start gap-4">
-              <div className="rounded-3xl bg-white p-7 shadow-xl">
-                <p className="text-sm font-medium text-royal-900/60">Você economizaria por mês</p>
-                <p className="mt-1 font-display text-4xl font-extrabold text-royal-700 sm:text-5xl">
-                  <AnimatedNumber value={dados.mensal} format={brl} />
-                </p>
-                <div className="mt-5 grid grid-cols-2 gap-4">
-                  <div className="rounded-2xl bg-brand-50 p-4">
-                    <p className="text-xs font-medium text-royal-900/60">Por ano</p>
-                    <p className="mt-1 font-display text-xl font-bold text-royal-900">
-                      <AnimatedNumber value={dados.anual} format={brl} />
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-royal-50 p-4">
-                    <p className="text-xs font-medium text-royal-900/60">Em 25 anos</p>
-                    <p className="mt-1 font-display text-xl font-bold text-royal-900">
-                      <AnimatedNumber value={dados.total25} format={brl} />
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 flex items-center gap-2 rounded-2xl bg-gradient-to-r from-brand-100 to-brand-50 px-4 py-3 text-sm text-royal-800">
-                  <Leaf className="h-5 w-5 shrink-0 text-brand-600" />
-                  Equivale a plantar cerca de{" "}
-                  <strong className="mx-1">
-                    <AnimatedNumber value={dados.arvores} /> árvores
-                  </strong>{" "}
-                  por ano. 🌱
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() =>
-                  document.getElementById("contato")?.scrollIntoView({ behavior: "smooth" })
-                }
-                className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-brand-500 px-6 py-4 font-bold text-royal-950 shadow-lg transition hover:bg-brand-400"
-              >
-                Quero essa economia
-                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-              </button>
-              <p className="text-center text-xs text-royal-200">
-                *Estimativa ilustrativa. A economia real depende de consumo, telhado, distribuidora e projeto.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Container>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
 /*  Usina de investimento                                              */
 /* ------------------------------------------------------------------ */
 const INVEST_BENEFICIOS = [
@@ -838,9 +685,9 @@ function Investimento() {
           <div>
             <SectionHead
               center={false}
-              eyebrow="Usina solar de investimento"
-              title="Faça seu dinheiro gerar energia — e renda"
-              subtitle="Nem todo mundo tem telhado ideal, mas todos podem investir em energia solar. Com a Sousa Costa, você adquire cotas de uma usina geradora e passa a receber os benefícios da energia produzida."
+              eyebrow="Investidores e ativos de energia"
+              title="Faça seu capital gerar energia — e renda"
+              subtitle="Para investidores e empresas que querem entrar no setor: desenvolvimento de usinas para investimento, geração compartilhada e apoio na aquisição de ativos de energia — da análise técnica à operação."
             />
             <div className="grid gap-4 sm:grid-cols-2">
               {INVEST_BENEFICIOS.map((b, i) => (
@@ -892,11 +739,11 @@ function Investimento() {
                   <p className="text-sm font-semibold">Invista com quem entende de energia</p>
                 </div>
                 <p className="mt-2 text-sm text-royal-100">
-                  Nossa equipe monta um plano de investimento conforme o seu objetivo — do primeiro aporte à sua renda
-                  mensal.
+                  Do primeiro aporte à operação: montamos o plano conforme seu objetivo — construir usina nova,
+                  investir em geração ou adquirir um ativo já em operação.
                 </p>
                 <a
-                  href={wa("Olá! Quero conhecer a usina solar de investimento e receber uma simulação de rentabilidade.")}
+                  href={wa("Olá! Sou investidor e quero conhecer as oportunidades em usinas e ativos de energia com a Sousa Costa.")}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-500 px-5 py-3 font-bold text-royal-950 transition hover:bg-brand-400"
@@ -919,10 +766,10 @@ function Investimento() {
 /*  Como funciona                                                      */
 /* ------------------------------------------------------------------ */
 const PASSOS = [
-  { icon: MessageCircle, title: "Fale com a gente", text: "Conte seu consumo e objetivo. Fazemos uma análise gratuita e sem compromisso." },
-  { icon: LineChart, title: "Projeto sob medida", text: "Nossos especialistas dimensionam a melhor solução e apresentam a economia real." },
-  { icon: BatteryCharging, title: "Instalação e ativação", text: "Cuidamos de tudo: homologação, instalação e conexão com a distribuidora." },
-  { icon: Sparkles, title: "Economize e acompanhe", text: "Sua energia começa a gerar economia — e você monitora tudo em tempo real." },
+  { icon: MessageCircle, title: "Fale com a gente", text: "Conte a necessidade da sua empresa ou usina — onde fica, o porte e o desafio. Análise sem compromisso." },
+  { icon: LineChart, title: "Diagnóstico e proposta", text: "Nossos engenheiros avaliam o caso (visita técnica quando necessário) e apresentam a proposta sob medida." },
+  { icon: BatteryCharging, title: "Execução", text: "EPC, retrofit, comissionamento ou manutenção — executados com equipe especializada, segurança e prazo." },
+  { icon: Sparkles, title: "Operação e resultados", text: "Usina monitorada 24/7, com relatórios de desempenho e plano de manutenção para performance contínua." },
 ];
 
 function ComoFunciona() {
@@ -962,9 +809,9 @@ function ComoFunciona() {
 const DEPOIMENTOS = [
   {
     nome: "Ricardo Almeida",
-    papel: "Cliente residencial",
+    papel: "Proprietário de usina",
     texto:
-      "Minha conta caiu de mais de R$ 700 para menos de R$ 80. A equipe cuidou de tudo, sem dor de cabeça. Melhor decisão que tomei.",
+      "A usina estava gerando bem abaixo do esperado. Depois do diagnóstico e do retrofit, voltou a performar — e hoje sigo com o plano de manutenção deles.",
   },
   {
     nome: "Fernanda Lima",
@@ -1070,7 +917,7 @@ function Projetos() {
         <SectionHead
           eyebrow="Portfólio · Projetos realizados"
           title="Usinas em operação, resultado comprovado"
-          subtitle="Da viabilidade ao O&M, desenvolvemos e gerenciamos usinas solares como ativos de infraestrutura — no Rio Grande do Norte e além."
+          subtitle="Da viabilidade ao O&M, desenvolvemos e gerenciamos usinas solares como ativos de infraestrutura — em todo o Brasil."
         />
 
         {/* Números reais do portfólio */}
@@ -1370,13 +1217,13 @@ function GaleriaDestaque() {
       <Container>
         <div className="mx-auto mb-8 max-w-2xl text-center">
           <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-brand-500/40 bg-brand-500/10 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-brand-600">
-            <Sparkles className="h-3.5 w-3.5" /> Projetos reais · RN
+            <Sparkles className="h-3.5 w-3.5" /> Projetos reais · Brasil
           </span>
           <h2 className="font-display text-2xl font-extrabold text-royal-950 sm:text-3xl">
             Veja usinas e instalações que já entregamos
           </h2>
           <p className="mt-2 text-royal-900/60">
-            Prova real do nosso trabalho — em operação, gerando economia.
+            Prova real do nosso trabalho — usinas em operação, gerando resultado.
           </p>
         </div>
 
@@ -1477,7 +1324,7 @@ function Galeria() {
         <SectionHead
           eyebrow="Galeria"
           title="Veja de perto o nosso trabalho"
-          subtitle="Fotos e vídeos de usinas e instalações reais da Sousa Costa Energia — do telhado residencial às usinas de grande porte no Rio Grande do Norte."
+          subtitle="Fotos e vídeos de usinas e plantas reais da Sousa Costa Energia — de telhados industriais às usinas de grande porte, em todo o Brasil."
         />
 
         {FILTROS_GALERIA.length > 1 && (
@@ -1554,28 +1401,32 @@ function Galeria() {
 /* ------------------------------------------------------------------ */
 const FAQ = [
   {
-    q: "A Sousa Costa instala energia solar em todo o Rio Grande do Norte?",
-    a: "Sim. Atendemos residências, empresas e indústrias em todo o Rio Grande do Norte — de Natal e São Gonçalo do Amarante ao interior — com projeto, instalação e homologação completos.",
+    q: "A Sousa Costa atende em todo o Brasil?",
+    a: "Sim. Atendemos empresas, indústrias e usinas em qualquer estado do Brasil — com sede no Rio Grande do Norte e equipes que se deslocam conforme o projeto, do diagnóstico à operação.",
+  },
+  {
+    q: "Vocês atendem clientes residenciais?",
+    a: "Nosso foco é exclusivamente empresarial: empresas, indústrias, proprietários de usinas e investidores. Não atendemos projetos residenciais para pessoa física.",
+  },
+  {
+    q: "O que inclui o O&M e o plano de manutenção?",
+    a: "Manutenção corretiva e preventiva, monitoramento 24/7, inspeções técnicas, termografia, lavagem especializada e relatórios de desempenho — em contratos recorrentes que protegem a geração e a vida útil da usina.",
+  },
+  {
+    q: "Minha usina está gerando menos do que deveria. Vocês resolvem?",
+    a: "Sim — esse é o nosso retrofit/repotenciação. Fazemos o diagnóstico (incluindo termografia), identificamos as perdas, modernizamos o que estiver defasado e devolvemos a usina à performance esperada.",
+  },
+  {
+    q: "Fazem comissionamento de usinas construídas por outras empresas?",
+    a: "Sim. Realizamos testes, inspeções e energização de usinas construídas por terceiros, com laudos e conformidade técnica para operação segura.",
   },
   {
     q: "O que é um sistema híbrido e o que é um BESS?",
-    a: "O sistema híbrido une painéis solares e baterias, garantindo energia armazenada para picos de consumo e quedas de rede. O BESS (Battery Energy Storage System) é o armazenamento em baterias para indústrias e grandes consumidores — corte de ponta, gestão de demanda e arbitragem de tarifa.",
+    a: "O sistema híbrido une geração solar e baterias, garantindo energia para cargas críticas em quedas de rede. O BESS (Battery Energy Storage System) é o armazenamento para indústrias e grandes consumidores — corte de ponta, gestão de demanda e arbitragem de tarifa.",
   },
   {
-    q: "Vocês fazem manutenção (O&M) de usinas solares?",
-    a: "Sim. Nosso serviço de O&M inclui inspeções preventivas, limpeza especializada, análise termográfica, monitoramento 24/7 e relatórios de desempenho, prolongando a vida útil e a performance da usina.",
-  },
-  {
-    q: "Preciso de telhado próprio para ter energia solar?",
-    a: "Não necessariamente. Além dos sistemas instalados no seu telhado, você pode participar da nossa usina solar de investimento e receber os benefícios da geração sem instalar nada.",
-  },
-  {
-    q: "Quanto tempo leva para começar a economizar?",
-    a: "Após a aprovação do projeto e a homologação junto à distribuidora, o sistema entra em operação e a economia aparece já nas primeiras faturas.",
-  },
-  {
-    q: "Como funciona o investimento em usina solar?",
-    a: "Você adquire uma cota de uma usina geradora e passa a receber a renda proporcional à energia produzida. Nossa equipe monta um plano conforme o seu objetivo.",
+    q: "Como funciona o investimento em usinas e ativos de energia?",
+    a: "Apoiamos investidores do início ao fim: desenvolvimento de usinas para investimento, geração compartilhada e análise técnica para aquisição de ativos já em operação. Nossa equipe monta o plano conforme o seu objetivo.",
   },
 ];
 
@@ -1634,46 +1485,40 @@ function FaqSection() {
 /*  Contato                                                            */
 /* ------------------------------------------------------------------ */
 const INTERESSES = [
-  "Instalação de energia solar (residência/empresa)",
-  "Solar Zero Grid",
-  "Sistema híbrido + baterias",
-  "BESS — armazenamento de energia",
-  "Usina solar de investimento",
-  "O&M / Manutenção de usina",
+  "O&M / Plano de manutenção de usina",
+  "Retrofit / Repotenciação de usina",
+  "EPC — Construção de usina",
+  "Comissionamento de usina",
+  "Lavagem e termografia",
+  "Sistema híbrido / BESS",
+  "Energia solar para minha empresa",
+  "Investimento / Aquisição de ativos",
 ];
 
 const inputCls =
   "w-full rounded-xl border border-royal-200 bg-royal-50/40 px-4 py-3 text-sm outline-none transition focus:border-brand-400 focus:bg-white focus:ring-2 focus:ring-brand-200";
 
-function Contato({ conta = 600 }) {
+function Contato() {
   const [form, setForm] = useState({
     nome: "",
     telefone: "",
     email: "",
     interesse: INTERESSES[0],
-    valorConta: conta,
+    valorConta: "",
     mensagem: "",
     consentimento: false,
   });
   const [status, setStatus] = useState("idle"); // idle | sending | success | error
 
-  // Mantém o valor da conta em sincronia com o simulador enquanto o usuário
-  // não editar o campo manualmente.
-  const contaEditada = useRef(false);
-  useEffect(() => {
-    if (!contaEditada.current) setForm((f) => ({ ...f, valorConta: conta }));
-  }, [conta]);
-
   const setField = (campo) => (e) => {
     const valor = e.target.type === "checkbox" ? e.target.checked : e.target.value;
-    if (campo === "valorConta") contaEditada.current = true;
     setForm((f) => ({ ...f, [campo]: valor }));
   };
 
   const textoWhats = () =>
     `Olá! Sou ${form.nome || "um interessado"}. ` +
     `Interesse: ${form.interesse}. ` +
-    `Conta média: ${brl(Number(form.valorConta) || 0)}. ` +
+    (Number(form.valorConta) ? `Conta média: ${brl(Number(form.valorConta))}. ` : "") +
     (form.mensagem ? `Mensagem: ${form.mensagem} ` : "") +
     `Podem me enviar uma proposta?`;
 
@@ -1816,15 +1661,15 @@ function Contato({ conta = 600 }) {
                     </div>
                     <div className="sm:col-span-1">
                       <label className="mb-1.5 block text-sm font-medium text-royal-900">
-                        Valor médio da conta de luz (R$)
+                        Conta de energia mensal (R$) — se for gerar
                       </label>
                       <input
                         type="number"
                         min="0"
-                        step="10"
+                        step="100"
                         value={form.valorConta}
                         onChange={setField("valorConta")}
-                        placeholder="600"
+                        placeholder="15000"
                         className={inputCls}
                       />
                     </div>
@@ -1842,7 +1687,7 @@ function Contato({ conta = 600 }) {
                         rows="3"
                         value={form.mensagem}
                         onChange={setField("mensagem")}
-                        placeholder="Conte um pouco sobre seu consumo ou objetivo..."
+                        placeholder="Conte sobre a usina ou a necessidade: porte (kWp/MW), cidade/UF, o desafio..."
                         className={inputCls}
                       />
                     </div>
@@ -1917,8 +1762,8 @@ function Footer() {
               className="h-14 w-auto sm:h-16"
             />
             <p className="mt-5 max-w-sm text-sm leading-relaxed text-royal-200">
-              Empresa de energia solar no Rio Grande do Norte: instalação de sistemas fotovoltaicos, usinas de
-              investimento, sistemas híbridos, BESS e manutenção (O&amp;M) para residências, empresas e indústrias.
+              Engenharia de energia solar para empresas, indústrias e usinas em todo o Brasil: EPC, O&amp;M com planos
+              de manutenção, retrofit, comissionamento, lavagem, termografia e armazenamento (BESS).
             </p>
             <div className="mt-6 flex gap-3">
               <a
@@ -1963,13 +1808,14 @@ function Footer() {
           </div>
 
           <div>
-            <p className="font-display text-sm font-bold uppercase tracking-widest text-brand-400">Soluções</p>
+            <p className="font-display text-sm font-bold uppercase tracking-widest text-brand-400">Serviços</p>
             <ul className="mt-4 space-y-2.5 text-sm text-royal-200">
-              <li>Instalação de energia solar</li>
-              <li>Sistemas híbridos + baterias</li>
-              <li>BESS — armazenamento</li>
-              <li>Usina de investimento</li>
-              <li>O&amp;M — manutenção</li>
+              <li>EPC — construção de usinas</li>
+              <li>O&amp;M e planos de manutenção</li>
+              <li>Retrofit e repotenciação</li>
+              <li>Comissionamento</li>
+              <li>Lavagem e termografia</li>
+              <li>Híbrido e BESS</li>
             </ul>
           </div>
         </div>
@@ -2024,10 +1870,6 @@ function FloatingWhatsApp() {
 /*  App                                                                */
 /* ------------------------------------------------------------------ */
 export default function App() {
-  // Valor da conta compartilhado: o simulador atualiza e o formulário
-  // de contato usa como dado de qualificação (pré-preenchido).
-  const [conta, setConta] = useState(600);
-
   // Captura o GCLID do anúncio (se houver na URL) logo na entrada, para
   // creditar a venda ao anúncio certo quando o lead fechar no Reonic.
   useEffect(() => {
@@ -2053,14 +1895,13 @@ export default function App() {
         <StatStrip />
         <GaleriaDestaque />
         <Solucoes />
-        <Simulador conta={conta} setConta={setConta} />
         <Investimento />
         <ComoFunciona />
         <Projetos />
         <Diferenciais />
         <FaqSection />
         <Galeria />
-        <Contato conta={conta} />
+        <Contato />
       </main>
       <Footer />
       <FloatingWhatsApp />
