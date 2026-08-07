@@ -87,15 +87,22 @@ const CONVERSOES = {
 };
 
 function registrarConversao(tipo, valor = 50) {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+  if (typeof window === "undefined") return;
   const c = CONVERSOES[tipo];
   if (!c) return;
-  // Conversão do Google Ads (só se houver rótulo configurado para este tipo)
-  if (c.adsSendTo) {
-    window.gtag("event", "conversion", { send_to: c.adsSendTo, value: valor, currency: "BRL" });
+  if (typeof window.gtag === "function") {
+    // Conversão do Google Ads (só se houver rótulo configurado para este tipo)
+    if (c.adsSendTo) {
+      window.gtag("event", "conversion", { send_to: c.adsSendTo, value: valor, currency: "BRL" });
+    }
+    // Evento do Google Analytics 4 (relatórios + públicos de remarketing)
+    window.gtag("event", c.ga4, { value: valor, currency: "BRL" });
   }
-  // Evento do Google Analytics 4 (relatórios + públicos de remarketing)
-  window.gtag("event", c.ga4, { value: valor, currency: "BRL" });
+  // Meta Pixel: formulário = Lead; clique no WhatsApp = Contact.
+  // Alimenta os públicos de remarketing da campanha do Meta (Fase 2).
+  if (typeof window.fbq === "function") {
+    window.fbq("track", tipo === "formulario" ? "Lead" : "Contact", { value: valor, currency: "BRL" });
+  }
 }
 
 /*
