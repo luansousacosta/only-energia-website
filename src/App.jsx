@@ -637,7 +637,19 @@ function Solucoes() {
         <SectionHead
           eyebrow="O que fazemos"
           title="Serviços completos para usinas e empresas"
-          subtitle="EPC, O&M, retrofit, comissionamento, lavagem e termografia — da construção à operação de usinas solares, em todo o Brasil."
+          subtitle={
+            <>
+              EPC, O&amp;M, retrofit, comissionamento, lavagem e termografia — da construção à operação de usinas
+              solares, em todo o Brasil. Cuidamos também do{" "}
+              <a
+                href={`${SERVICOS_BASE}/servicos/projeto-de-energia-solar/`}
+                className="font-semibold text-royal-600 underline decoration-brand-400 decoration-2 underline-offset-4 transition hover:text-royal-800"
+              >
+                projeto elétrico e da solicitação de acesso na distribuidora
+              </a>
+              , até a homologação.
+            </>
+          }
         />
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {SOLUCOES.map((s, i) => (
@@ -674,6 +686,81 @@ function Solucoes() {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Serviços documentais e regulatórios (subdomínio servicos.)         */
+/* ------------------------------------------------------------------ */
+/*
+ * Páginas publicadas em servicos.sousacosta.com.br. São links reais para o
+ * nosso subdomínio — sem nofollow e sem UTM (o GA4 é o mesmo dos dois lados,
+ * então a sessão continua sozinha entre os domínios).
+ */
+const SERVICOS_BASE = "https://servicos.sousacosta.com.br";
+
+const SERVICOS_COSERN = [
+  {
+    icon: BatteryCharging,
+    href: `${SERVICOS_BASE}/servicos/carregador-de-veiculo-eletrico-condominio/`,
+    title: "Recarga de veículos elétricos em condomínios",
+    text: "Projeto, medição por vaga, instalação e aumento de carga, dentro da RT 05 do CBMRN.",
+  },
+  {
+    icon: Sun,
+    href: `${SERVICOS_BASE}/servicos/projeto-de-energia-solar/`,
+    title: "Projeto solar e homologação na distribuidora",
+    text: "Projeto elétrico, ART e solicitação de acesso conduzidos até a homologação.",
+  },
+  {
+    icon: ShieldCheck,
+    href: `${SERVICOS_BASE}/servicos/laudo-tecnico/`,
+    title: "Laudo técnico e ART",
+    text: "Inspeção, medições e responsabilidade técnica registrada no CREA.",
+  },
+  {
+    icon: Wallet,
+    href: `${SERVICOS_BASE}/servicos/consultoria-de-faturamento/`,
+    title: "Revisão de faturas de energia",
+    text: "Conferência de tarifa, demanda, tributos e compensação de créditos.",
+  },
+];
+
+function ServicosCosern() {
+  return (
+    <section id="servicos-cosern" className="bg-royal-50/50 py-20 sm:py-28">
+      <Container>
+        <SectionHead
+          eyebrow="Documentação e regulatório"
+          title="Serviços junto à Cosern"
+          subtitle="Projetos, laudos e processos regulatórios conduzidos do protocolo à aprovação — para quem precisa resolver a burocracia da distribuidora sem travar a obra."
+        />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {SERVICOS_COSERN.map((s, i) => (
+            <Reveal key={s.href} delay={i * 0.08}>
+              <div className="group relative h-full overflow-hidden rounded-3xl border border-royal-100 bg-white p-7 shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-brand-300 hover:shadow-glow">
+                <div className="absolute right-0 top-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-brand-100 transition-transform duration-500 group-hover:translate-x-6 group-hover:-translate-y-6" />
+                <div className="relative">
+                  <div className="inline-flex rounded-2xl bg-royal-600 p-3 text-white shadow-lg shadow-royal-600/25">
+                    <s.icon className="h-6 w-6" />
+                  </div>
+                  <h3 className="mt-5 font-display text-lg font-bold text-royal-950">
+                    <a
+                      href={s.href}
+                      className="inline-flex items-start gap-1.5 transition hover:text-royal-600"
+                    >
+                      {s.title}
+                      <ArrowRight className="mt-1 h-4 w-4 shrink-0 transition group-hover:translate-x-1" />
+                    </a>
+                  </h3>
+                  <p className="mt-2 text-sm leading-relaxed text-royal-900/65">{s.text}</p>
+                </div>
+              </div>
+            </Reveal>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /*  Usina de investimento                                              */
 /* ------------------------------------------------------------------ */
 const INVEST_BENEFICIOS = [
@@ -694,7 +781,18 @@ function Investimento() {
               center={false}
               eyebrow="Investidores e ativos de energia"
               title="Faça seu capital gerar energia — e renda"
-              subtitle="Para investidores e empresas que querem entrar no setor: desenvolvimento de usinas para investimento, geração compartilhada e apoio na aquisição de ativos de energia — da análise técnica à operação."
+              subtitle={
+                <>
+                  Para investidores e empresas que querem entrar no setor: desenvolvimento de usinas para investimento,{" "}
+                  <a
+                    href={`${SERVICOS_BASE}/servicos/multiplas-unidades-consumidoras/`}
+                    className="font-semibold text-royal-600 underline decoration-brand-400 decoration-2 underline-offset-4 transition hover:text-royal-800"
+                  >
+                    geração compartilhada entre múltiplas unidades consumidoras
+                  </a>{" "}
+                  e apoio na aquisição de ativos de energia — da análise técnica à operação.
+                </>
+              }
             />
             <div className="grid gap-4 sm:grid-cols-2">
               {INVEST_BENEFICIOS.map((b, i) => (
@@ -1761,7 +1859,7 @@ function Footer() {
   return (
     <footer className="border-t border-royal-100 bg-royal-950 text-white">
       <Container className="py-14">
-        <div className="grid gap-10 md:grid-cols-4">
+        <div className="grid gap-10 md:grid-cols-4 lg:grid-cols-5">
           <div className="md:col-span-2">
             <img
               src="logo-sousa-costa-branca.png"
@@ -1823,6 +1921,47 @@ function Footer() {
               <li>Comissionamento</li>
               <li>Lavagem e termografia</li>
               <li>Híbrido e BESS</li>
+            </ul>
+          </div>
+
+          <div>
+            <p className="font-display text-sm font-bold uppercase tracking-widest text-brand-400">
+              Serviços junto à Cosern
+            </p>
+            <ul className="mt-4 space-y-2.5 text-sm text-royal-200">
+              {[
+                {
+                  href: `${SERVICOS_BASE}/servicos/carregador-de-veiculo-eletrico-condominio/`,
+                  label: "Recarga de veículos elétricos em condomínios",
+                },
+                {
+                  href: `${SERVICOS_BASE}/servicos/projeto-de-energia-solar/`,
+                  label: "Projeto solar e solicitação de acesso",
+                },
+                {
+                  href: `${SERVICOS_BASE}/servicos/multiplas-unidades-consumidoras/`,
+                  label: "Projeto EMUC para múltiplas unidades",
+                },
+                {
+                  href: `${SERVICOS_BASE}/servicos/alteracao-de-rateio/`,
+                  label: "Alteração de rateio de créditos",
+                },
+                {
+                  href: `${SERVICOS_BASE}/servicos/alteracao-de-carga-baixa-tensao/`,
+                  label: "Aumento de carga em baixa tensão",
+                },
+                {
+                  href: `${SERVICOS_BASE}/servicos/consultoria-de-faturamento/`,
+                  label: "Revisão de faturas de energia",
+                },
+                { href: `${SERVICOS_BASE}/`, label: "Ver todos os serviços" },
+              ].map((s) => (
+                <li key={s.href}>
+                  <a href={s.href} className="transition hover:text-white">
+                    {s.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -1902,6 +2041,7 @@ export default function App() {
         <StatStrip />
         <GaleriaDestaque />
         <Solucoes />
+        <ServicosCosern />
         <Investimento />
         <ComoFunciona />
         <Projetos />
