@@ -1969,7 +1969,10 @@ function Footer() {
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-royal-300 sm:flex-row">
           <p>
             © {new Date().getFullYear()} Sousa Costa LTDA · CNPJ 48.725.763/0001-26 · Rua Vitória, 17, Amarante — São
-            Gonçalo do Amarante/RN
+            Gonçalo do Amarante/RN ·{" "}
+            <a href="/politica-de-privacidade/" className="underline transition hover:text-white">
+              Política de privacidade
+            </a>
           </p>
           <p>Feito com energia limpa ⚡ e tecnologia.</p>
         </div>
