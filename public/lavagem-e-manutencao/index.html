@@ -161,7 +161,7 @@
       input:focus-visible { outline: 3px solid rgba(62, 64, 149, 0.3); border-color: var(--royal-600); }
       input:disabled { background: var(--fundo-suave); color: var(--suave); }
       .opcoes { display: grid; gap: 8px; }
-      .opcoes.tres { grid-template-columns: repeat(3, 1fr); }
+      .opcoes.duas-col { grid-template-columns: repeat(2, 1fr); }
       .opcao { position: relative; display: block; cursor: pointer; }
       .opcao input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
       .opcao span {
@@ -177,7 +177,7 @@
         border: 1px solid #c9cbdc;
         border-radius: 10px;
       }
-      .opcoes:not(.tres) .opcao span { justify-content: flex-start; text-align: left; }
+      .opcoes:not(.duas-col) .opcao span { justify-content: flex-start; text-align: left; }
       .opcao:hover span { background: var(--royal-50); }
       .opcao input:checked + span { border-color: var(--royal-600); background: var(--royal-50); box-shadow: inset 0 0 0 1px var(--royal-600); font-weight: 600; color: var(--royal-700); }
       .opcao input:focus-visible + span { outline: 3px solid rgba(62, 64, 149, 0.3); }
@@ -330,10 +330,11 @@
 
                 <fieldset id="f-tipo">
                   <legend>O sistema fica em:</legend>
-                  <div class="opcoes tres">
+                  <div class="opcoes duas-col">
                     <label class="opcao"><input type="radio" name="tipo" value="casa" /><span>Casa</span></label>
                     <label class="opcao"><input type="radio" name="tipo" value="comercio" /><span>Comércio</span></label>
-                    <label class="opcao"><input type="radio" name="tipo" value="industria" /><span>Indústria ou usina</span></label>
+                    <label class="opcao"><input type="radio" name="tipo" value="industria" /><span>Indústria</span></label>
+                    <label class="opcao"><input type="radio" name="tipo" value="usina" /><span>Usina solo</span></label>
                   </div>
                   <p class="erro" role="alert"></p>
                 </fieldset>
@@ -504,7 +505,7 @@
           dano: 'placa ou cabo danificado',
           outro: ''
         };
-        var TIPOS = { casa: '', comercio: ' (comércio)', industria: ' (indústria ou usina)' };
+        var TIPOS = { casa: '', comercio: ' (comércio)', industria: ' (indústria)', usina: ' (usina solo)' };
 
         var form = document.getElementById('form');
         var placas = document.getElementById('placas');
