@@ -624,6 +624,19 @@
           }).then(function () { clearTimeout(limite); });
         }
 
+        // Quem chega pelo anúncio de corretiva (AD03_CORRETIVA) vê o topo falando de defeito
+        // e o formulário já marcado. ?servico=problema faz o mesmo em qualquer link.
+        (function ajustarParaCorretiva() {
+          var p = new URLSearchParams(location.search);
+          var corretiva = /corretiva/i.test(p.get('utm_content') || '') || p.get('servico') === 'problema';
+          if (!corretiva) return;
+          document.querySelector('.hero h1').innerHTML = 'Sistema solar parado ou gerando menos? <em>A gente avalia</em>';
+          document.querySelector('.hero .sub').textContent = 'Atendemos manutenção corretiva em casas e comércios de Natal e região, até 120 km. Conte o que está acontecendo e a gente combina a avaliação.';
+          document.querySelector('#area-form h2').textContent = 'Conte o que está acontecendo';
+          form.querySelector('input[name="servico"][value="problema"]').checked = true;
+          blocoProblema.hidden = false;
+        })();
+
         form.addEventListener('change', function (e) {
           if (e.target.name === 'servico') blocoProblema.hidden = e.target.value !== 'problema';
         });
