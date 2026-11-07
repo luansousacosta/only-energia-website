@@ -1,0 +1,693 @@
+<!doctype html>
+<!--
+  Landing page dos anúncios de lavagem e manutenção. Página estática, servida
+  direto de public/ como a política de privacidade: o site não tem rotas e o
+  Vite copia este arquivo para dist/ sem passar pelo React.
+
+  O formulário faz POST no workflow "Formulario Lavagem e Manutencao -> Agata"
+  do n8n. Se os campos mudarem aqui, atualize o node "Normaliza Formulario" lá
+  e a seção "O que coletamos" da política de privacidade.
+
+  Preço não aparece nesta página de propósito: a Ágata apresenta o total na
+  conversa, seguindo o roteiro. Só publique serviço que estiver nesse roteiro.
+-->
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#3E4095" />
+    <title>Lavagem e manutenção de placas solares em Natal e região | Sousa Costa Energia</title>
+    <meta
+      name="description"
+      content="Lavagem com manutenção preventiva e conserto de sistemas solares para casas e comércios, até 120 km de Natal. Preencha e fale com a gente no WhatsApp."
+    />
+    <link rel="canonical" href="https://www.sousacosta.com.br/lavagem-e-manutencao/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="Sousa Costa Energia" />
+    <meta property="og:title" content="Lavagem e manutenção de placas solares | Sousa Costa Energia" />
+    <meta property="og:description" content="Suas placas limpas, revisadas e rendendo o que deveriam. Atendemos até 120 km de Natal." />
+    <meta property="og:url" content="https://www.sousacosta.com.br/lavagem-e-manutencao/" />
+    <meta property="og:image" content="https://www.sousacosta.com.br/projetos/pousada-jorge.jpg" />
+    <link rel="icon" type="image/png" href="/logo-sousa-costa.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Sora:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      // Medição só no domínio real: prévias não devem sujar os relatórios.
+      window.SC_PRODUCAO = /(^|\.)sousacosta\.com\.br$/.test(location.hostname);
+      if (window.SC_PRODUCAO) {
+        var g = document.createElement('script');
+        g.async = true;
+        g.src = 'https://www.googletagmanager.com/gtag/js?id=G-236DB6S5SY';
+        document.head.appendChild(g);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { dataLayer.push(arguments); };
+        gtag('js', new Date());
+        gtag('config', 'AW-658673813');
+        gtag('config', 'G-236DB6S5SY');
+
+        !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+        n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+        document,'script','https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1409387827711916');
+        fbq('track', 'PageView');
+      }
+    </script>
+
+    <style>
+      :root {
+        --royal-50: #eeeef8;
+        --royal-100: #dcdcf1;
+        --royal-600: #3e4095;
+        --royal-700: #34357c;
+        --royal-800: #2c2d63;
+        --royal-900: #262750;
+        --royal-950: #171730;
+        --brand-50: #f6fce9;
+        --brand-300: #bde866;
+        --brand-500: #9ad52a;
+        --brand-700: #5f8a19;
+        --tinta: #1e2233;
+        --suave: #5b6076;
+        --linha: #e3e4f0;
+        --fundo-suave: #f4f5fa;
+        --erro: #b42318;
+        --sombra: 0 10px 40px -12px rgba(38, 39, 80, 0.18);
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+        color: var(--tinta);
+        background: #fff;
+        line-height: 1.6;
+      }
+      img { max-width: 100%; display: block; }
+      a { color: var(--royal-600); }
+      h1, h2, h3 { font-family: Sora, Inter, sans-serif; line-height: 1.2; margin: 0; }
+      p { margin: 0; }
+      .container { width: 100%; max-width: 1160px; margin: 0 auto; padding-inline: 16px; }
+      @media (min-width: 640px) { .container { padding-inline: 24px; } }
+
+      /* Topo */
+      .topo { background: #fff; border-bottom: 1px solid var(--linha); }
+      .topo .container { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; }
+      .topo img { height: 32px; width: auto; }
+      .topo a.fone { font-weight: 600; font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
+
+      /* Hero com o formulário */
+      .hero {
+        background: linear-gradient(150deg, var(--royal-600), var(--royal-800) 70%, var(--royal-900));
+        color: #fff;
+        padding: 40px 0 48px;
+      }
+      .hero .container { display: grid; gap: 32px; align-items: start; }
+      @media (min-width: 960px) {
+        .hero { padding: 72px 0; }
+        .hero .container { grid-template-columns: 1fr 460px; gap: 56px; }
+      }
+      .selo {
+        display: inline-block;
+        background: rgba(154, 213, 42, 0.16);
+        color: var(--brand-300);
+        font-weight: 600;
+        font-size: 0.8125rem;
+        padding: 6px 14px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+      .hero h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 800; letter-spacing: -0.02em; }
+      .hero h1 em { font-style: normal; color: var(--brand-500); }
+      .hero .sub { margin-top: 16px; font-size: 1.0625rem; color: var(--royal-100); max-width: 34em; }
+      .pontos { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 10px; }
+      .pontos li { display: flex; gap: 10px; align-items: flex-start; }
+      /* No celular o formulário vem primeiro: estes pontos se repetem logo abaixo dele. */
+      @media (max-width: 959px) { .pontos { display: none; } }
+      .check { flex: none; width: 22px; height: 22px; margin-top: 2px; color: var(--brand-500); }
+
+      /* Formulário */
+      .cartao {
+        background: #fff;
+        color: var(--tinta);
+        border-radius: 16px;
+        padding: 24px 20px;
+        box-shadow: 0 20px 60px -15px rgba(23, 23, 48, 0.55);
+      }
+      @media (min-width: 640px) { .cartao { padding: 28px; } }
+      .cartao h2 { font-size: 1.3125rem; font-weight: 700; color: var(--royal-950); }
+      .cartao > p.apoio { margin-top: 4px; color: var(--suave); font-size: 0.9375rem; }
+      form { margin-top: 20px; display: grid; gap: 18px; }
+      fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+      legend, label.campo { display: block; font-weight: 600; font-size: 0.9375rem; color: var(--royal-950); margin-bottom: 8px; padding: 0; }
+      input[type='text'], input[type='tel'], input[type='number'] {
+        width: 100%;
+        font: inherit;
+        font-size: 1rem;
+        color: var(--tinta);
+        background: #fff;
+        padding: 12px 14px;
+        min-height: 48px;
+        border: 1px solid #c9cbdc;
+        border-radius: 10px;
+      }
+      input:focus-visible { outline: 3px solid rgba(62, 64, 149, 0.3); border-color: var(--royal-600); }
+      input:disabled { background: var(--fundo-suave); color: var(--suave); }
+      .opcoes { display: grid; gap: 8px; }
+      .opcoes.tres { grid-template-columns: repeat(3, 1fr); }
+      .opcao { position: relative; display: block; cursor: pointer; }
+      .opcao input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+      .opcao span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        height: 100%;
+        min-height: 48px;
+        padding: 10px 12px;
+        font-size: 0.9375rem;
+        font-weight: 500;
+        border: 1px solid #c9cbdc;
+        border-radius: 10px;
+      }
+      .opcoes:not(.tres) .opcao span { justify-content: flex-start; text-align: left; }
+      .opcao:hover span { background: var(--royal-50); }
+      .opcao input:checked + span { border-color: var(--royal-600); background: var(--royal-50); box-shadow: inset 0 0 0 1px var(--royal-600); font-weight: 600; color: var(--royal-700); }
+      .opcao input:focus-visible + span { outline: 3px solid rgba(62, 64, 149, 0.3); }
+      .linha-check { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9375rem; cursor: pointer; }
+      .linha-check input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--royal-600); }
+      .nao-sei { margin-top: 10px; }
+      .lgpd { font-size: 0.875rem; color: var(--suave); }
+      .erro { color: var(--erro); font-size: 0.875rem; margin-top: 6px; }
+      .erro:empty { display: none; }
+      .tem-erro input[type='text'], .tem-erro input[type='tel'], .tem-erro input[type='number'], .tem-erro .opcao span { border-color: var(--erro); }
+      [hidden] { display: none !important; }
+      .campo-oculto { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+      .botao {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        min-height: 52px;
+        padding: 12px 24px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--brand-500);
+        color: var(--royal-950);
+        font-family: Sora, Inter, sans-serif;
+        font-weight: 700;
+        font-size: 1rem;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .botao:hover { background: var(--brand-300); }
+      .botao:focus-visible { outline: 3px solid var(--royal-600); outline-offset: 2px; }
+      .botao[disabled] { opacity: 0.65; cursor: progress; }
+      .pronto { text-align: center; padding: 16px 0 4px; }
+      .pronto h2 { margin-bottom: 8px; }
+      .pronto p { color: var(--suave); margin-bottom: 20px; }
+      .pronto:focus { outline: none; }
+
+      /* Seções */
+      section.bloco { padding: 56px 0; }
+      @media (min-width: 960px) { section.bloco { padding: 88px 0; } }
+      section.suave { background: var(--fundo-suave); }
+      .bloco h2 { font-size: clamp(1.625rem, 3.5vw, 2.25rem); font-weight: 700; color: var(--royal-950); letter-spacing: -0.01em; }
+      .bloco .intro { margin-top: 12px; color: var(--suave); max-width: 40em; font-size: 1.0625rem; }
+      .duas { display: grid; gap: 32px; align-items: center; }
+      @media (min-width: 960px) { .duas { grid-template-columns: 1fr 1fr; gap: 56px; } }
+      .foto { border-radius: 16px; box-shadow: var(--sombra); aspect-ratio: 4 / 3; object-fit: cover; width: 100%; }
+      .lista { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 14px; }
+      .lista li { display: flex; gap: 12px; align-items: flex-start; }
+      .lista .check { color: var(--brand-700); }
+      .lista strong { display: block; color: var(--royal-950); }
+      .lista small { display: block; color: var(--suave); font-size: 0.9375rem; }
+      .passos { list-style: none; counter-reset: passo; margin: 32px 0 0; padding: 0; display: grid; gap: 16px; }
+      @media (min-width: 760px) { .passos { grid-template-columns: repeat(3, 1fr); } }
+      .passos li { counter-increment: passo; background: #fff; border: 1px solid var(--linha); border-radius: 16px; padding: 24px; }
+      .passos li::before {
+        content: counter(passo);
+        display: grid;
+        place-items: center;
+        width: 36px;
+        height: 36px;
+        margin-bottom: 12px;
+        border-radius: 999px;
+        background: var(--royal-600);
+        color: #fff;
+        font-family: Sora, sans-serif;
+        font-weight: 700;
+      }
+      .passos h3 { font-size: 1.0625rem; color: var(--royal-950); margin-bottom: 6px; }
+      .passos p { color: var(--suave); font-size: 0.9375rem; }
+      details { border-bottom: 1px solid var(--linha); padding: 16px 0; }
+      details:first-of-type { margin-top: 20px; border-top: 1px solid var(--linha); }
+      summary { cursor: pointer; font-weight: 600; color: var(--royal-950); }
+      details p { margin-top: 8px; color: var(--suave); }
+      .faq { max-width: 760px; }
+      .faixa { background: linear-gradient(150deg, var(--royal-600), var(--royal-800)); color: #fff; padding: 56px 0; text-align: center; }
+      .faixa h2 { font-size: clamp(1.5rem, 3.5vw, 2.125rem); font-weight: 700; }
+      .faixa h2 em { font-style: normal; color: var(--brand-500); }
+      .faixa .botao { width: auto; margin-top: 24px; }
+      footer { background: var(--royal-950); color: var(--royal-100); padding: 32px 0 88px; font-size: 0.875rem; }
+      footer a { color: #fff; }
+      footer p + p { margin-top: 6px; }
+      .zap {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 10;
+        display: grid;
+        place-items: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 999px;
+        background: #25d366;
+        color: #fff;
+        box-shadow: 0 8px 24px rgba(23, 23, 48, 0.35);
+      }
+      .zap svg { width: 28px; height: 28px; }
+      @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+  </head>
+  <body>
+    <header class="topo">
+      <div class="container">
+        <a href="/" aria-label="Sousa Costa Energia, ir para o site">
+          <img src="/logo-sousa-costa.png" alt="Sousa Costa Energia" width="148" height="32" />
+        </a>
+        <a class="fone" href="https://wa.me/558491388651" data-whatsapp>(84) 9138-8651</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div>
+            <span class="selo">Até 120 km de Natal</span>
+            <h1>Suas placas limpas, revisadas e <em>rendendo o que deveriam</em></h1>
+            <p class="sub">
+              A sujeira pode estar tirando até 30% da geração do seu sistema, e energia que deixou de
+              ser gerada não volta mais. A gente limpa, testa e mostra o que encontrou.
+            </p>
+            <ul class="pontos">
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                Lavagem e manutenção preventiva no mesmo serviço
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                Teste elétrico com PV Isotest e relatório com fotos
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                Sistema com defeito? A gente também atende
+              </li>
+            </ul>
+          </div>
+
+          <div class="cartao" id="formulario">
+            <div id="area-form">
+              <h2>Receba seu orçamento no WhatsApp</h2>
+              <p class="apoio">Leva menos de um minuto.</p>
+              <form id="form" novalidate>
+                <fieldset id="f-servico">
+                  <legend>O que você precisa?</legend>
+                  <div class="opcoes">
+                    <label class="opcao"><input type="radio" name="servico" value="lavagem" /><span>Lavagem com manutenção preventiva</span></label>
+                    <label class="opcao"><input type="radio" name="servico" value="problema" /><span>Meu sistema está com problema</span></label>
+                  </div>
+                  <p class="erro" role="alert"></p>
+                </fieldset>
+
+                <fieldset id="f-tipo">
+                  <legend>O sistema fica em:</legend>
+                  <div class="opcoes tres">
+                    <label class="opcao"><input type="radio" name="tipo" value="casa" /><span>Casa</span></label>
+                    <label class="opcao"><input type="radio" name="tipo" value="comercio" /><span>Comércio</span></label>
+                    <label class="opcao"><input type="radio" name="tipo" value="industria" /><span>Indústria ou usina</span></label>
+                  </div>
+                  <p class="erro" role="alert"></p>
+                </fieldset>
+
+                <div id="f-cidade">
+                  <label class="campo" for="cidade">Em qual cidade ficam as placas?</label>
+                  <input id="cidade" name="cidade" type="text" autocomplete="address-level2" maxlength="60" />
+                  <p class="erro" role="alert"></p>
+                </div>
+
+                <div id="f-placas">
+                  <label class="campo" for="placas">Quantas placas tem o sistema?</label>
+                  <input id="placas" name="placas" type="number" inputmode="numeric" min="1" step="1" />
+                  <label class="linha-check nao-sei"><input id="nao-sei" type="checkbox" /> Não sei</label>
+                  <p class="erro" role="alert"></p>
+                </div>
+
+                <fieldset id="f-problema" hidden>
+                  <legend>O que está acontecendo?</legend>
+                  <div class="opcoes">
+                    <label class="opcao"><input type="radio" name="problema" value="inversor" /><span>Inversor parado ou com erro</span></label>
+                    <label class="opcao"><input type="radio" name="problema" value="gerando_menos" /><span>Gerando menos que o normal</span></label>
+                    <label class="opcao"><input type="radio" name="problema" value="dano" /><span>Placa ou cabo danificado</span></label>
+                    <label class="opcao"><input type="radio" name="problema" value="outro" /><span>Outro</span></label>
+                  </div>
+                  <p class="erro" role="alert"></p>
+                </fieldset>
+
+                <div id="f-nome">
+                  <label class="campo" for="nome">Seu nome</label>
+                  <input id="nome" name="nome" type="text" autocomplete="name" maxlength="80" />
+                  <p class="erro" role="alert"></p>
+                </div>
+
+                <div id="f-telefone">
+                  <label class="campo" for="telefone">Seu WhatsApp, com DDD</label>
+                  <input id="telefone" name="telefone" type="tel" autocomplete="tel-national" inputmode="tel" placeholder="(84) 99999-9999" />
+                  <p class="erro" role="alert"></p>
+                </div>
+
+                <!-- Campo isca: pessoas não veem; robôs preenchem e o n8n descarta. -->
+                <div class="campo-oculto" aria-hidden="true">
+                  <label for="website">Não preencha</label>
+                  <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
+                </div>
+
+                <div id="f-lgpd">
+                  <label class="linha-check lgpd">
+                    <input id="lgpd" type="checkbox" />
+                    <span>Autorizo o contato pelo WhatsApp. Veja a <a href="/politica-de-privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</span>
+                  </label>
+                  <p class="erro" role="alert"></p>
+                </div>
+
+                <button class="botao" id="enviar" type="submit">Continuar no WhatsApp</button>
+              </form>
+            </div>
+
+            <div class="pronto" id="pronto" tabindex="-1" hidden>
+              <h2>Recebemos suas respostas</h2>
+              <p id="pronto-texto">Estamos abrindo o WhatsApp. É só enviar a mensagem pronta para continuar.</p>
+              <a class="botao" id="abrir-whatsapp" href="https://wa.me/558491388651" data-whatsapp>Abrir o WhatsApp</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bloco">
+        <div class="container duas">
+          <div>
+            <h2>O que está incluído no serviço</h2>
+            <p class="intro">Lavagem e preventiva são um serviço só, feito na mesma visita.</p>
+            <ul class="lista">
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                <div><strong>Limpeza completa dos módulos</strong></div>
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                <div><strong>Teste elétrico com PV Isotest</strong><small>Testa isolamento e fugas de corrente, e encontra falhas que não aparecem a olho nu.</small></div>
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                <div><strong>Inspeção visual</strong><small>Módulos, fixações, cabos e conectores.</small></div>
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                <div><strong>Verificação do inversor e do quadro de proteção</strong></div>
+              </li>
+              <li>
+                <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5" /></svg>
+                <div><strong>Relatório simples com fotos</strong><small>Você fica sabendo o que foi encontrado.</small></div>
+              </li>
+            </ul>
+          </div>
+          <img class="foto" src="/projetos/pousada-jorge.jpg" alt="Sistema solar instalado pela Sousa Costa Energia em uma pousada no Rio Grande do Norte" width="1280" height="960" loading="lazy" />
+        </div>
+      </section>
+
+      <section class="bloco suave">
+        <div class="container">
+          <h2>Como funciona</h2>
+          <ol class="passos">
+            <li><h3>Você preenche</h3><p>Conta o que precisa, a cidade e quantas placas tem o sistema.</p></li>
+            <li><h3>A gente conversa no WhatsApp</h3><p>Você recebe o valor total da lavagem com preventiva. Em caso de defeito, a gente combina a avaliação.</p></li>
+            <li><h3>A equipe vai até você</h3><p>Você escolhe o melhor dia e turno, e a equipe confirma o agendamento.</p></li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="bloco">
+        <div class="container faq">
+          <h2>Perguntas frequentes</h2>
+          <details>
+            <summary>Quanto custa?</summary>
+            <p>O valor depende do número de placas e da cidade. Você recebe o total no WhatsApp, com pagamento em até 5x sem juros no cartão ou 5% de desconto à vista no Pix ou em dinheiro.</p>
+          </details>
+          <details>
+            <summary>Posso contratar só a lavagem?</summary>
+            <p>Não. A lavagem é sempre feita junto com a manutenção preventiva, em um único serviço com um único valor.</p>
+          </details>
+          <details>
+            <summary>Não sei quantas placas tenho. E agora?</summary>
+            <p>Marque "Não sei" no formulário. No WhatsApp, você pode passar o tamanho do sistema em kWp ou mandar uma foto do telhado.</p>
+          </details>
+          <details>
+            <summary>Vocês atendem a minha cidade?</summary>
+            <p>A lavagem com preventiva atende cidades em um raio de cerca de 120 km de Natal. Se você não tiver certeza, preencha o formulário e a gente confirma.</p>
+          </details>
+          <details>
+            <summary>Atendem indústrias e usinas?</summary>
+            <p>Sim, em todo o Brasil. Nesses casos o orçamento é feito depois de entender o porte e a necessidade do sistema.</p>
+          </details>
+        </div>
+      </section>
+
+      <section class="faixa">
+        <div class="container">
+          <h2>Faz tempo que suas placas não recebem uma <em>limpeza</em>?</h2>
+          <a class="botao" href="#formulario">Quero meu orçamento</a>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>© 2026 Sousa Costa LTDA · CNPJ 48.725.763/0001-26</p>
+        <p><a href="/">Site da Sousa Costa Energia</a> · <a href="/politica-de-privacidade/">Política de privacidade</a> · <a href="mailto:contato@sousacosta.com.br">contato@sousacosta.com.br</a></p>
+      </div>
+    </footer>
+
+    <a class="zap" id="zap" href="https://wa.me/558491388651" data-whatsapp aria-label="Falar no WhatsApp">
+      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.47 14.38c-.3-.15-1.76-.87-2.03-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.16-.17.2-.35.22-.64.07-.3-.15-1.26-.46-2.39-1.47-.88-.79-1.48-1.76-1.65-2.06-.17-.3-.02-.46.13-.6.13-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.03-.52-.07-.15-.67-1.61-.91-2.2-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.21 3.07c.15.2 2.1 3.2 5.08 4.49.71.3 1.26.49 1.69.63.71.22 1.36.19 1.87.12.57-.09 1.76-.72 2.01-1.41.25-.7.25-1.29.17-1.41-.07-.13-.27-.2-.56-.35M12.05 21.79h-.01a9.87 9.87 0 0 1-5.03-1.38l-.36-.21-3.74.98 1-3.65-.24-.37a9.86 9.86 0 0 1-1.51-5.26c0-5.45 4.44-9.88 9.89-9.88 2.64 0 5.12 1.03 6.99 2.9a9.82 9.82 0 0 1 2.89 6.99c0 5.45-4.44 9.88-9.88 9.88M20.46 3.49A11.82 11.82 0 0 0 12.05 0C5.5 0 .16 5.34.16 11.89c0 2.1.55 4.14 1.59 5.95L.06 24l6.31-1.65a11.88 11.88 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.34 11.89-11.89 0-3.18-1.24-6.17-3.49-8.42" /></svg>
+    </a>
+
+    <script>
+      (function () {
+        var ENDPOINT = 'https://sousacosta.app.n8n.cloud/webhook/lead-manutencao';
+        var WHATSAPP = '558491388651';
+        var MSG_GERAL = 'Oi! Vim pela página de lavagem e manutenção da Sousa Costa Energia.';
+        var CONVERSOES = {
+          formulario: { adsSendTo: 'AW-658673813/gC70CLS76c0cEJWhiroC', ga4: 'generate_lead' },
+          whatsapp: { adsSendTo: 'AW-658673813/m5MKCLe76c0cEJWhiroC', ga4: 'click_whatsapp' }
+        };
+        var PROBLEMAS = {
+          inversor: 'inversor parado ou com erro',
+          gerando_menos: 'gerando menos que o normal',
+          dano: 'placa ou cabo danificado',
+          outro: ''
+        };
+        var TIPOS = { casa: '', comercio: ' (comércio)', industria: ' (indústria ou usina)' };
+
+        var form = document.getElementById('form');
+        var placas = document.getElementById('placas');
+        var naoSei = document.getElementById('nao-sei');
+        var telefone = document.getElementById('telefone');
+        var blocoProblema = document.getElementById('f-problema');
+
+        function linkWhatsApp(mensagem) {
+          return 'https://wa.me/' + WHATSAPP + '?text=' + encodeURIComponent(mensagem);
+        }
+
+        function registrarConversao(tipo) {
+          if (!window.SC_PRODUCAO) return;
+          var c = CONVERSOES[tipo];
+          if (typeof window.gtag === 'function') {
+            gtag('event', 'conversion', { send_to: c.adsSendTo, value: 50, currency: 'BRL' });
+            gtag('event', c.ga4, { value: 50, currency: 'BRL' });
+          }
+          if (typeof window.fbq === 'function') {
+            fbq('track', tipo === 'formulario' ? 'Lead' : 'Contact', { value: 50, currency: 'BRL' });
+          }
+        }
+
+        // Mesma chave do site principal: quem clicou em anúncio do Google antes não perde o GCLID.
+        function obterGclid() {
+          try {
+            var p = new URLSearchParams(location.search);
+            var novo = p.get('gclid') || p.get('wbraid') || p.get('gbraid');
+            if (novo) {
+              localStorage.setItem('sc_gclid', JSON.stringify({ gclid: novo, ts: Date.now() }));
+              return novo;
+            }
+            var salvo = JSON.parse(localStorage.getItem('sc_gclid') || 'null');
+            if (salvo && Date.now() - Number(salvo.ts || 0) < 90 * 24 * 60 * 60 * 1000) return salvo.gclid;
+          } catch (e) { /* armazenamento indisponível */ }
+          return '';
+        }
+        obterGclid();
+
+        function valor(nome) {
+          var marcado = form.querySelector('input[name="' + nome + '"]:checked');
+          return marcado ? marcado.value : '';
+        }
+
+        function marcarErro(id, texto) {
+          var bloco = document.getElementById(id);
+          bloco.classList.add('tem-erro');
+          bloco.querySelector('.erro').textContent = texto;
+        }
+
+        function limparErros() {
+          form.querySelectorAll('.tem-erro').forEach(function (b) { b.classList.remove('tem-erro'); });
+          form.querySelectorAll('.erro').forEach(function (e) { e.textContent = ''; });
+        }
+
+        function digitosTelefone() {
+          var d = telefone.value.replace(/\D/g, '');
+          if (d.length > 11 && d.indexOf('55') === 0) d = d.slice(2);
+          return d;
+        }
+
+        function validar() {
+          limparErros();
+          var servico = valor('servico');
+          var numero = Number(placas.value);
+          if (!servico) marcarErro('f-servico', 'Escolha uma opção.');
+          if (!valor('tipo')) marcarErro('f-tipo', 'Escolha uma opção.');
+          if (!document.getElementById('cidade').value.trim()) marcarErro('f-cidade', 'Informe a cidade onde ficam as placas.');
+          if (!naoSei.checked && !(Number.isInteger(numero) && numero > 0)) marcarErro('f-placas', 'Informe o número de placas ou marque "Não sei".');
+          if (servico === 'problema' && !valor('problema')) marcarErro('f-problema', 'Escolha uma opção.');
+          if (!document.getElementById('nome').value.trim()) marcarErro('f-nome', 'Informe seu nome.');
+          var d = digitosTelefone();
+          if (d.length < 10 || d.length > 11) marcarErro('f-telefone', 'Informe o WhatsApp com DDD.');
+          if (!document.getElementById('lgpd').checked) marcarErro('f-lgpd', 'Precisamos da sua autorização para falar com você.');
+          var primeiro = form.querySelector('.tem-erro input');
+          if (primeiro) primeiro.focus();
+          return !primeiro;
+        }
+
+        function montarMensagem() {
+          var cidade = document.getElementById('cidade').value.trim();
+          var tipo = TIPOS[valor('tipo')] || '';
+          if (valor('servico') === 'problema') {
+            var desc = PROBLEMAS[valor('problema')];
+            return 'Oi! Preenchi o formulário do site: problema no sistema em ' + cidade + tipo + (desc ? ', ' + desc : '') + '.';
+          }
+          var qtd = naoSei.checked ? '' : ', ' + Number(placas.value) + ' placas';
+          return 'Oi! Preenchi o formulário do site: lavagem com preventiva' + qtd + ' em ' + cidade + tipo + '.';
+        }
+
+        function enviarLead() {
+          if (!window.SC_PRODUCAO) return Promise.resolve();
+          var p = new URLSearchParams(location.search);
+          var controle = new AbortController();
+          var limite = setTimeout(function () { controle.abort(); }, 4000);
+          return fetch(ENDPOINT, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            keepalive: true,
+            signal: controle.signal,
+            body: JSON.stringify({
+              servico: valor('servico'),
+              tipo: valor('tipo'),
+              cidade: document.getElementById('cidade').value.trim(),
+              placas: naoSei.checked ? null : Number(placas.value),
+              problema: valor('problema'),
+              nome: document.getElementById('nome').value.trim(),
+              telefone: digitosTelefone(),
+              consentimentoLGPD: document.getElementById('lgpd').checked,
+              website: document.getElementById('website').value,
+              gclid: obterGclid(),
+              anuncio: p.get('utm_content') || p.get('utm_campaign') || '',
+              paginaUrl: location.href.split('?')[0]
+            })
+          }).catch(function () {
+            // Sem lead registrado, a mensagem pronta ainda leva as respostas para a Ágata.
+          }).then(function () { clearTimeout(limite); });
+        }
+
+        // Quem chega pelo anúncio de corretiva (AD03_CORRETIVA) vê o topo falando de defeito
+        // e o formulário já marcado. ?servico=problema faz o mesmo em qualquer link.
+        (function ajustarParaCorretiva() {
+          var p = new URLSearchParams(location.search);
+          var corretiva = /corretiva/i.test(p.get('utm_content') || '') || p.get('servico') === 'problema';
+          if (!corretiva) return;
+          document.querySelector('.hero h1').innerHTML = 'Sistema solar parado ou gerando menos? <em>A gente avalia</em>';
+          document.querySelector('.hero .sub').textContent = 'Atendemos manutenção corretiva em casas e comércios de Natal e região, até 120 km. Conte o que está acontecendo e a gente combina a avaliação.';
+          document.querySelector('#area-form h2').textContent = 'Conte o que está acontecendo';
+          form.querySelector('input[name="servico"][value="problema"]').checked = true;
+          blocoProblema.hidden = false;
+        })();
+
+        form.addEventListener('change', function (e) {
+          if (e.target.name === 'servico') blocoProblema.hidden = e.target.value !== 'problema';
+        });
+
+        naoSei.addEventListener('change', function () {
+          placas.disabled = naoSei.checked;
+          if (naoSei.checked) placas.value = '';
+        });
+
+        telefone.addEventListener('input', function () {
+          var d = telefone.value.replace(/\D/g, '').slice(0, 13);
+          if (d.length > 11) { telefone.value = d; return; }
+          if (d.length > 6) telefone.value = '(' + d.slice(0, 2) + ') ' + d.slice(2, d.length - 4) + '-' + d.slice(-4);
+          else if (d.length > 2) telefone.value = '(' + d.slice(0, 2) + ') ' + d.slice(2);
+          else telefone.value = d;
+        });
+
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+          if (!validar()) return;
+          var botao = document.getElementById('enviar');
+          botao.disabled = true;
+          botao.textContent = 'Enviando...';
+          var destino = linkWhatsApp(montarMensagem());
+          registrarConversao('formulario');
+          enviarLead().then(function () {
+            document.getElementById('area-form').hidden = true;
+            var pronto = document.getElementById('pronto');
+            document.getElementById('abrir-whatsapp').href = destino;
+            pronto.hidden = false;
+            pronto.focus();
+            if (window.SC_PRODUCAO) {
+              location.href = destino;
+            } else {
+              document.getElementById('pronto-texto').textContent = 'Prévia: nada foi enviado e o WhatsApp não abre sozinho. O botão mostra a mensagem que o cliente enviaria.';
+            }
+          });
+        });
+
+        document.querySelectorAll('a[data-whatsapp]').forEach(function (a) {
+          if (a.id !== 'abrir-whatsapp') a.href = linkWhatsApp(MSG_GERAL);
+          a.addEventListener('click', function () { registrarConversao('whatsapp'); });
+        });
+
+        // O botão flutuante não compete com o formulário enquanto ele está na tela.
+        if ('IntersectionObserver' in window) {
+          new IntersectionObserver(function (itens) {
+            document.getElementById('zap').hidden = itens[0].isIntersecting;
+          }).observe(document.getElementById('formulario'));
+        }
+      })();
+    </script>
+  </body>
+</html>
