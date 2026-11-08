@@ -545,6 +545,17 @@
         }
         obterGclid();
 
+        // Identificadores do Meta: quando a venda fecha, o n8n devolve ao Meta quem comprou
+        // (API de Conversões) e eles ligam a venda ao clique no anúncio.
+        function cookie(nome) {
+          var m = document.cookie.match('(?:^|; )' + nome + '=([^;]*)');
+          return m ? decodeURIComponent(m[1]) : '';
+        }
+        function obterFbc() {
+          var fbclid = new URLSearchParams(location.search).get('fbclid');
+          return cookie('_fbc') || (fbclid ? 'fb.1.' + Date.now() + '.' + fbclid : '');
+        }
+
         function valor(nome) {
           var marcado = form.querySelector('input[name="' + nome + '"]:checked');
           return marcado ? marcado.value : '';
@@ -617,6 +628,8 @@
               consentimentoLGPD: document.getElementById('lgpd').checked,
               website: document.getElementById('website').value,
               gclid: obterGclid(),
+              fbc: obterFbc(),
+              fbp: cookie('_fbp'),
               anuncio: p.get('utm_content') || p.get('utm_campaign') || '',
               paginaUrl: location.href.split('?')[0]
             })
