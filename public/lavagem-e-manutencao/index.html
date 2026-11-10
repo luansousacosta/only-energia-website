@@ -529,6 +529,17 @@
           }
         }
 
+        // Funil do formulário no GA4, para separar "página não convence" de "formulário trava".
+        // Um nome de evento por etapa: aparecem direto em Relatórios > Eventos, sem dimensão
+        // personalizada. Cada evento sai uma vez por visita.
+        var enviados = {};
+        function evento(nome) {
+          if (!window.SC_PRODUCAO || enviados[nome]) return;
+          enviados[nome] = true;
+          if (typeof window.gtag === 'function') gtag('event', nome);
+        }
+        var ETAPAS = { servico: 'form_servico', tipo: 'form_tipo', cidade: 'form_cidade', placas: 'form_placas', nao_sei: 'form_placas', problema: 'form_problema', nome: 'form_nome', telefone: 'form_telefone' };
+
         // Mesma chave do site principal: quem clicou em anúncio do Google antes não perde o GCLID.
         function obterGclid() {
           try {
@@ -653,7 +664,11 @@
 
         form.addEventListener('change', function (e) {
           if (e.target.name === 'servico') blocoProblema.hidden = e.target.value !== 'problema';
+          var etapa = ETAPAS[e.target.name || e.target.id.replace('-', '_')];
+          if (etapa && (e.target.type === 'checkbox' ? e.target.checked : String(e.target.value).trim())) evento(etapa);
         });
+
+        form.addEventListener('focusin', function () { evento('form_start'); });
 
         naoSei.addEventListener('change', function () {
           placas.disabled = naoSei.checked;
@@ -670,7 +685,11 @@
 
         form.addEventListener('submit', function (e) {
           e.preventDefault();
-          if (!validar()) return;
+          if (!validar()) {
+            // Sai a cada tentativa barrada, não só na primeira: muitas seguidas indicam campo confuso.
+            if (window.SC_PRODUCAO && typeof window.gtag === 'function') gtag('event', 'form_erro');
+            return;
+          }
           var botao = document.getElementById('enviar');
           botao.disabled = true;
           botao.textContent = 'Enviando...';
@@ -699,6 +718,7 @@
         if ('IntersectionObserver' in window) {
           new IntersectionObserver(function (itens) {
             document.getElementById('zap').hidden = itens[0].isIntersecting;
+            if (itens[0].isIntersecting) evento('form_view');
           }).observe(document.getElementById('formulario'));
         }
       })();
