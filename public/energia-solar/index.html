@@ -482,6 +482,9 @@
     <script>
       (function () {
         var ENDPOINT = 'https://sousacosta.app.n8n.cloud/webhook/lead-solar';
+        // Caminho paralelo: planilha Google (apps-script/leads-planilha.gs). Se o n8n cair,
+        // o lead continua gravado e chega por e-mail.
+        var PLANILHA_ENDPOINT = 'https://script.google.com/macros/s/AKfycbz5UTqUQFsg3ty_StwMT181edH_5sVIikxJlG-Tiz1zQg-nssDoi5Hy5GqM1N34ZF1ypQ/exec';
         var WHATSAPP = '558491388651';
         var MSG_GERAL = 'Oi! Vim pela página de energia solar da Sousa Costa Energia.';
         // Reaproveita os rótulos de conversão do Google Ads da landing de lavagem: ainda
@@ -711,29 +714,42 @@
           // Com anexo o corpo passa de 64 KB, teto do keepalive no navegador: nesse caso
           // o envio é normal, com prazo maior, e a tela avisa que está lendo a conta.
           var limite = setTimeout(function () { controle.abort(); }, temArquivo ? 30000 : 4000);
-          return fetch(ENDPOINT, {
+          var corpo = {
+            tipo: valor('tipo'),
+            cidade: document.getElementById('cidade').value.trim(),
+            contaFaixa: document.getElementById('conta-valor').value,
+            conta: contaPronta,
+            nome: document.getElementById('nome').value.trim(),
+            telefone: digitosTelefone(),
+            consentimentoLGPD: document.getElementById('lgpd').checked,
+            website: document.getElementById('website').value,
+            gclid: obterGclid(),
+            fbc: obterFbc(),
+            fbp: cookie('_fbp'),
+            anuncio: p.get('utm_content') || p.get('utm_campaign') || '',
+            paginaUrl: location.href.split('?')[0]
+          };
+          var envios = [fetch(ENDPOINT, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             keepalive: !temArquivo,
             signal: controle.signal,
-            body: JSON.stringify({
-              tipo: valor('tipo'),
-              cidade: document.getElementById('cidade').value.trim(),
-              contaFaixa: document.getElementById('conta-valor').value,
-              conta: contaPronta,
-              nome: document.getElementById('nome').value.trim(),
-              telefone: digitosTelefone(),
-              consentimentoLGPD: document.getElementById('lgpd').checked,
-              website: document.getElementById('website').value,
-              gclid: obterGclid(),
-              fbc: obterFbc(),
-              fbp: cookie('_fbp'),
-              anuncio: p.get('utm_content') || p.get('utm_campaign') || '',
-              paginaUrl: location.href.split('?')[0]
-            })
+            body: JSON.stringify(corpo)
           }).catch(function () {
-            // Sem lead registrado, a mensagem pronta ainda leva as respostas para a Ágata.
-          }).then(function () { clearTimeout(limite); });
+            // Sem lead registrado, a mensagem pronta ainda leva as respostas para o WhatsApp.
+          })];
+          if (PLANILHA_ENDPOINT) {
+            // text/plain e no-cors: o Apps Script não responde ao preflight do CORS.
+            envios.push(fetch(PLANILHA_ENDPOINT, {
+              method: 'POST',
+              mode: 'no-cors',
+              headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+              keepalive: !temArquivo,
+              signal: controle.signal,
+              body: JSON.stringify(Object.assign({ formulario: 'solar' }, corpo))
+            }).catch(function () {}));
+          }
+          return Promise.all(envios).then(function () { clearTimeout(limite); });
         }
 
         // Quem chega pelo anúncio comercial vê o topo falando de empresa.
