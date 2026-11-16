@@ -199,8 +199,7 @@
       }
 
       /* Consentimento */
-      .lgpd { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; font-size: 0.8125rem; color: var(--suave); }
-      .lgpd input { margin-top: 3px; accent-color: var(--royal-600); }
+      .lgpd { margin: 12px 0 0; font-size: 0.8125rem; color: var(--suave); text-align: center; }
 
       /* Botões */
       .botao {
@@ -364,19 +363,12 @@
                 <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
               </div>
 
-              <div class="campo" id="f-lgpd" style="margin-top: 0">
-                <label class="lgpd">
-                  <input id="lgpd" type="checkbox" />
-                  <span>
-                    Autorizo a Sousa Costa Energia a me contatar no WhatsApp sobre este pedido e a usar
-                    os dados e a conta de luz que eu enviar para montar a proposta, conforme a
-                    <a href="/politica-de-privacidade/" target="_blank" rel="noopener">política de privacidade</a>.
-                  </span>
-                </label>
-                <p class="erro"></p>
-              </div>
-
               <button class="botao" id="enviar" type="submit">Quero minha proposta</button>
+              <p class="lgpd">
+                Ao enviar, você autoriza a Sousa Costa Energia a falar com você no WhatsApp sobre este pedido e a
+                usar os dados e a conta de luz enviados para montar a proposta, conforme a
+                <a href="/politica-de-privacidade/" target="_blank" rel="noopener">política de privacidade</a>.
+              </p>
               <p class="dica" style="text-align: center">Sem compromisso. Nada de ligação insistente.</p>
             </form>
           </div>
@@ -691,7 +683,6 @@
           if (!document.getElementById('nome').value.trim()) marcarErro('f-nome', 'Informe seu nome.');
           var d = digitosTelefone();
           if (d.length < 10 || d.length > 11) marcarErro('f-telefone', 'Informe o WhatsApp com DDD.');
-          if (!document.getElementById('lgpd').checked) marcarErro('f-lgpd', 'Precisamos da sua autorização para falar com você.');
           var primeiro = form.querySelector('.tem-erro input, .tem-erro select');
           if (primeiro) primeiro.focus();
           return !primeiro;
@@ -721,7 +712,8 @@
             conta: contaPronta,
             nome: document.getElementById('nome').value.trim(),
             telefone: digitosTelefone(),
-            consentimentoLGPD: document.getElementById('lgpd').checked,
+            // O aviso abaixo do botão informa a autorização: enviar o pedido é o consentimento.
+            consentimentoLGPD: true,
             website: document.getElementById('website').value,
             gclid: obterGclid(),
             fbc: obterFbc(),

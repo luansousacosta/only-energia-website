@@ -191,7 +191,7 @@
       .linha-check { display: flex; gap: 10px; align-items: flex-start; font-size: 0.9375rem; cursor: pointer; }
       .linha-check input { flex: none; width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--royal-600); }
       .nao-sei { margin-top: 10px; }
-      .lgpd { font-size: 0.875rem; color: var(--suave); }
+      .lgpd { margin: 10px 0 0; font-size: 0.8125rem; color: var(--suave); text-align: center; }
       .erro { color: var(--erro); font-size: 0.875rem; margin-top: 6px; }
       .erro:empty { display: none; }
       .tem-erro input[type='text'], .tem-erro input[type='tel'], .tem-erro input[type='number'], .tem-erro .opcao span { border-color: var(--erro); }
@@ -420,15 +420,8 @@
                   <input id="website" name="website" type="text" tabindex="-1" autocomplete="off" />
                 </div>
 
-                <div id="f-lgpd">
-                  <label class="linha-check lgpd">
-                    <input id="lgpd" type="checkbox" />
-                    <span>Autorizo o contato pelo WhatsApp. Veja a <a href="/politica-de-privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</span>
-                  </label>
-                  <p class="erro" role="alert"></p>
-                </div>
-
                 <button class="botao" id="enviar" type="submit">Continuar no WhatsApp</button>
+                <p class="lgpd">Ao continuar, você autoriza a Sousa Costa Energia a falar com você pelo WhatsApp sobre este pedido. Veja a <a href="/politica-de-privacidade/" target="_blank" rel="noopener">política de privacidade</a>.</p>
               </form>
             </div>
 
@@ -669,7 +662,6 @@
           if (!document.getElementById('nome').value.trim()) marcarErro('f-nome', 'Informe seu nome.');
           var d = digitosTelefone();
           if (d.length < 10 || d.length > 11) marcarErro('f-telefone', 'Informe o WhatsApp com DDD.');
-          if (!document.getElementById('lgpd').checked) marcarErro('f-lgpd', 'Precisamos da sua autorização para falar com você.');
           var primeiro = form.querySelector('.tem-erro input');
           if (primeiro) primeiro.focus();
           return !primeiro;
@@ -699,7 +691,8 @@
             problema: valor('problema'),
             nome: document.getElementById('nome').value.trim(),
             telefone: digitosTelefone(),
-            consentimentoLGPD: document.getElementById('lgpd').checked,
+            // O aviso abaixo do botão informa a autorização: enviar o pedido é o consentimento.
+            consentimentoLGPD: true,
             website: document.getElementById('website').value,
             gclid: obterGclid(),
             fbc: obterFbc(),
@@ -768,7 +761,11 @@
           e.preventDefault();
           if (!validar()) {
             // Sai a cada tentativa barrada, não só na primeira: muitas seguidas indicam campo confuso.
-            if (window.SC_PRODUCAO && typeof window.gtag === 'function') gtag('event', 'form_erro');
+            // "campos" diz quais falharam (ex.: "placas,telefone").
+            var campos = Array.prototype.map.call(form.querySelectorAll('.tem-erro'), function (b) {
+              return b.id.replace('f-', '');
+            }).join(',');
+            if (window.SC_PRODUCAO && typeof window.gtag === 'function') gtag('event', 'form_erro', { campos: campos });
             return;
           }
           var botao = document.getElementById('enviar');
